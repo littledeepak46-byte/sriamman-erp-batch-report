@@ -140,7 +140,7 @@ def get_stats(db: Session = Depends(get_db), _: User = Depends(get_current_user)
 
     today_count = db.query(func.count(Delivery.id)).filter(Delivery.delivery_date == today).scalar() or 0
     monthly_m3 = float(db.query(func.sum(Delivery.quantity_m3)).filter(Delivery.delivery_date >= month_start).scalar() or 0)
-    active_vehicles = db.query(func.count()).select_from(__import__("app.models.vehicle", fromlist=["Vehicle"]).Vehicle).filter_by(is_active=True).scalar() or 0
+    active_vehicles = db.query(func.count(Vehicle.id)).filter(Vehicle.is_active == True).scalar() or 0
     dc_this_month = db.query(func.count(Delivery.id)).filter(Delivery.delivery_date >= month_start).scalar() or 0
 
     return DeliveryStats(

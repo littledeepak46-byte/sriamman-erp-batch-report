@@ -2,17 +2,22 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard, Users, Truck, FlaskConical,
-  ClipboardList, History, LogOut, Menu, X
+  ClipboardList, History, LogOut, Menu, X,
+  BarChart2, ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 
-const navItems = [
+const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/delivery/new", label: "New Delivery", icon: ClipboardList },
   { to: "/history", label: "History", icon: History },
+  { divider: true, label: "MASTER DATA" },
   { to: "/master/customers", label: "Customers", icon: Users },
   { to: "/master/vehicles", label: "Vehicles & Drivers", icon: Truck },
   { to: "/master/design-mix", label: "Design Mix", icon: FlaskConical },
+  { divider: true, label: "REPORTS" },
+  { to: "/reports", label: "Reports", icon: BarChart2 },
+  { to: "/admin", label: "Admin Panel", icon: ShieldCheck, adminOnly: true },
 ];
 
 export default function Layout({ children }) {
@@ -35,18 +40,29 @@ export default function Layout({ children }) {
           <p className="text-xs text-blue-300 mt-0.5">Batching ERP</p>
         </div>
         <nav className="flex-1 overflow-y-auto py-2">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-blue-800 transition-colors
-                ${location.pathname === to ? "bg-blue-800 text-accent font-medium" : "text-blue-100"}`}
-            >
-              <Icon size={16} />
-              {label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item, idx) => {
+            if (item.divider) {
+              return (
+                <div key={idx} className="px-4 pt-4 pb-1">
+                  <p className="text-xs font-semibold text-blue-400 tracking-widest uppercase">{item.label}</p>
+                </div>
+              );
+            }
+            if (item.adminOnly && user?.role !== "admin") return null;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-blue-800 transition-colors
+                  ${location.pathname === item.to ? "bg-blue-800 text-accent font-medium" : "text-blue-100"}`}
+              >
+                <Icon size={16} />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="px-4 py-3 border-t border-blue-800 text-xs text-blue-300">
           <p className="font-medium text-white">{user?.username}</p>
