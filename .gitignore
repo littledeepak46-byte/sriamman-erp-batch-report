@@ -15,6 +15,9 @@ dist/
 # Alembic generated (keep versions tracked)
 *.pyc
 
+# Environment
+.env
+
 # OS
 .DS_Store
 Thumbs.db

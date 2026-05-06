@@ -17,7 +17,9 @@ def seed():
     # Admin user
     if not db.query(User).filter_by(username="admin").first():
         db.add(User(username="admin", password_hash=hash_password("admin123"), role="admin"))
-        print("Created admin user (password: admin123) — CHANGE THIS IN PRODUCTION")
+        print("✅ Created admin user  username=admin  password=admin123  ← CHANGE IN PRODUCTION")
+    else:
+        print("ℹ️  Admin user already exists, skipping.")
 
     # Material types & grades
     materials = {
