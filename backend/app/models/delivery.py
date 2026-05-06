@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, DateTime, Integer, Numeric, String, Time, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, Numeric, String, Time, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -11,30 +11,30 @@ class Delivery(Base):
     dc_number = Column(String(30), unique=True, nullable=False, index=True)
     batch_number = Column(Integer, nullable=True)
 
-    customer_id = Column(Integer, nullable=False, index=True)
-    site_id = Column(Integer, nullable=False)
-    plant_type = Column(String(10), nullable=True)     # M1.25 | CP30 | None
-    material_type_id = Column(Integer, nullable=False)
-    grade_id = Column(Integer, nullable=False)
-    pumping_type_id = Column(Integer, nullable=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
+    site_id = Column(Integer, ForeignKey("customer_sites.id"), nullable=False)
+    plant_type = Column(String(10), nullable=True)
+    material_type_id = Column(Integer, ForeignKey("material_types.id"), nullable=False)
+    grade_id = Column(Integer, ForeignKey("material_grades.id"), nullable=False)
+    pumping_type_id = Column(Integer, ForeignKey("pumping_types.id"), nullable=True)
 
     quantity_m3 = Column(Numeric(8, 2), nullable=False)
     cumulative_qty_m3 = Column(Numeric(8, 2), nullable=True)
 
-    vehicle_id = Column(Integer, nullable=False)
-    driver_id = Column(Integer, nullable=False)
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=False)
+    driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=False)
 
     delivery_date = Column(Date, nullable=False)
     delivery_time = Column(Time, nullable=False)
 
-    site_location = Column(String(100), nullable=True)  # city from site
+    site_location = Column(String(100), nullable=True)
 
     gross_weight_kg = Column(Numeric(10, 2), nullable=True)
     empty_weight_kg = Column(Numeric(10, 2), nullable=True)
     net_weight_kg = Column(Numeric(10, 2), nullable=True)
 
-    design_mix_id = Column(Integer, nullable=True)
-    created_by = Column(Integer, nullable=True)
+    design_mix_id = Column(Integer, ForeignKey("design_mixes.id"), nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # relationships
@@ -55,7 +55,7 @@ class BatchReportActual(Base):
     __tablename__ = "batch_report_actuals"
 
     id = Column(Integer, primary_key=True, index=True)
-    delivery_id = Column(Integer, nullable=False, index=True)
+    delivery_id = Column(Integer, ForeignKey("deliveries.id"), nullable=False, index=True)
     batch_sequence = Column(Integer, nullable=False)   # 1, 2, 3 …
     batch_size_m3 = Column(Numeric(6, 3), nullable=True)
     cumulative_qty_m3 = Column(Numeric(8, 2), nullable=True)

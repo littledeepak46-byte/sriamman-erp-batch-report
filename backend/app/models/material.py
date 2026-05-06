@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -19,7 +19,7 @@ class MaterialGrade(Base):
     __tablename__ = "material_grades"
 
     id = Column(Integer, primary_key=True, index=True)
-    material_type_id = Column(Integer, nullable=False, index=True)
+    material_type_id = Column(Integer, ForeignKey("material_types.id"), nullable=False, index=True)
     grade_name = Column(String(50), nullable=False)
     is_active = Column(Boolean, default=True)
 

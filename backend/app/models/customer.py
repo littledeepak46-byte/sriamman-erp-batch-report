@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -25,7 +25,7 @@ class CustomerSite(Base):
     __tablename__ = "customer_sites"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, nullable=False, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     site_name = Column(String(200), nullable=False)
     door_no = Column(String(50), nullable=True)
     street1 = Column(String(255), nullable=True)

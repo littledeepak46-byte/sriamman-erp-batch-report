@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Integer, Numeric, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -9,7 +9,7 @@ class DesignMix(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     plant_type = Column(String(10), nullable=False)  # M1.25 | CP30
-    grade_id = Column(Integer, nullable=False, index=True)
+    grade_id = Column(Integer, ForeignKey("material_grades.id"), nullable=False, index=True)
     version = Column(Integer, nullable=False, default=1)
     valid_from = Column(Date, nullable=True)
     valid_to = Column(Date, nullable=True)
