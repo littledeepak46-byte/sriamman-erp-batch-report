@@ -220,6 +220,7 @@ def get_print_data(delivery_id: int, db: Session = Depends(get_db), _: User = De
         dm = db.get(DesignMix, d.design_mix_id)
         if dm:
             dm_out = DesignMixPrint.model_validate(dm)
+            dm_out.customer_name = customer.name if customer else None
             dm_out.grade_name = grade.grade_name if grade else None
 
     # Batch actuals
