@@ -4,180 +4,174 @@ import { useNavigate } from "react-router-dom";
 import { Printer, ArrowLeft } from "lucide-react";
 import { usePrintData } from "../../hooks/usePrintData";
 
-// ── Schwing-Stetter style logo mark ──────────────────────────────────────────
-function Logo() {
+// ── Schwing Stetter style logo ────────────────────────────────────────────────
+function Logo({ size = 60 }) {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" style={{ marginRight: "10px", flexShrink: 0 }}>
-      <rect width="40" height="40" rx="4" fill="#1e3a5f" />
-      <polygon points="8,32 20,8 32,32" fill="none" stroke="#f5a623" strokeWidth="3" />
-      <line x1="20" y1="8" x2="20" y2="32" stroke="#fff" strokeWidth="1.5" />
+    <svg width={size} height={size} viewBox="0 0 60 60">
+      <rect width="60" height="60" fill="white" />
+      <polygon points="8,52 30,8 52,52 44,52 30,22 16,52" fill="#2d7a2d" />
+      <polygon points="16,52 30,24 44,52 37,52 30,32 23,52" fill="white" />
     </svg>
   );
 }
 
-// ── Slip layout ───────────────────────────────────────────────────────────────
+// ── Slip Template (matches sample PDF exactly) ────────────────────────────────
 function Slip({ d }) {
+  // Date format: DD-MM-YYYY
   const dateStr = d.delivery_date
-    ? new Date(d.delivery_date + "T00:00:00").toLocaleDateString("en-IN",
-        { day: "2-digit", month: "2-digit", year: "numeric" })
-    : "";
+    ? (() => {
+        const dt = new Date(d.delivery_date + "T00:00:00");
+        const dd = String(dt.getDate()).padStart(2, "0");
+        const mm = String(dt.getMonth() + 1).padStart(2, "0");
+        const yyyy = dt.getFullYear();
+        return `${dd}-${mm}-${yyyy}`;
+      })()
+    : "—";
 
+  // Time: 05:21 AM format
   const timeStr = d.delivery_time
     ? (() => {
         const [h, m] = d.delivery_time.split(":");
         const hr = parseInt(h);
-        return `${String(hr % 12 || 12).padStart(2, "0")}:${m} ${hr >= 12 ? "PM" : "AM"}`;
+        const ampm = hr >= 12 ? "PM" : "AM";
+        const h12 = String(hr % 12 || 12).padStart(2, "0");
+        return `${h12}:${m} ${ampm}`;
       })()
-    : "";
+    : "—";
 
-  const loadedWt = d.gross_weight_kg ? Number(d.gross_weight_kg).toLocaleString("en-IN") : "—";
-  const emptyWt  = d.empty_weight_kg ? Number(d.empty_weight_kg).toLocaleString("en-IN") : "—";
-  const netWt    = d.net_weight_kg   ? Number(d.net_weight_kg).toLocaleString("en-IN")   : "—";
+  const loadedWt = d.gross_weight_kg ? Number(d.gross_weight_kg).toLocaleString("en-IN") : "";
+  const emptyWt  = d.empty_weight_kg ? Number(d.empty_weight_kg).toLocaleString("en-IN") : "";
+  const netWt    = d.net_weight_kg   ? Number(d.net_weight_kg).toLocaleString("en-IN")   : "";
+  const ticketNo = `WS-${String(d.id || 0).padStart(5, "0")}`;
+
+  const R = { fontFamily: "Arial, sans-serif" };
+  const labelStyle = { ...R, fontSize: "10px", color: "#333", paddingBottom: "6px" };
+  const valueStyle = { ...R, fontSize: "10px", fontWeight: "500", paddingBottom: "6px" };
+  const bigStyle   = { ...R, fontSize: "13px", fontWeight: "bold" };
 
   return (
-    <div style={{
-      fontFamily: "Arial, sans-serif",
-      maxWidth: "160mm",
-      margin: "0 auto",
-      border: "1px solid #ddd",
-      padding: "0 0 8mm 0",
-    }}>
+    <div style={{ ...R, maxWidth: "175mm", margin: "0 auto", border: "1px solid #ccc" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        padding: "6mm 8mm 4mm",
-        borderBottom: "2px solid #1e3a5f",
-        marginBottom: "5mm",
-      }}>
-        <Logo />
-        <div>
-          <div style={{ fontSize: "14px", fontWeight: "bold", color: "#1e3a5f", letterSpacing: "0.3px" }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "5mm 6mm 4mm", borderBottom: "2px solid #000" }}>
+        <Logo size={58} />
+        <div style={{ marginLeft: "8px" }}>
+          <div style={{ ...R, fontSize: "16px", fontWeight: "bold" }}>
             SRI AMMAN CONSTRUCTION AND EQUIPMENTS
           </div>
-          <div style={{ fontSize: "9px", color: "#555", marginTop: "1px" }}>
-            CHINNAR, SHOOLAGIRI
-          </div>
-          <div style={{ fontSize: "9px", color: "#555" }}>
-            KRISHNAGIRI-635117
-          </div>
+          <div style={{ ...R, fontSize: "10px", marginTop: "2px" }}>CHINNAR ,SHOOLAGIRI</div>
+          <div style={{ ...R, fontSize: "10px" }}>KRISHNAGIRI-635117</div>
         </div>
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────── */}
-      <div style={{ padding: "0 8mm" }}>
-
-        {/* Date / Time */}
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "4mm", fontSize: "10px" }}>
+      <div style={{ padding: "4mm 6mm" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
+            {/* Row 1 */}
             <tr>
-              <td style={{ width: "30%", paddingBottom: "4px", color: "#333" }}>Date:</td>
-              <td style={{ width: "30%", paddingBottom: "4px", fontWeight: "500" }}>{dateStr}</td>
-              <td style={{ width: "20%", paddingBottom: "4px", color: "#333" }}>Material:</td>
-              <td style={{ paddingBottom: "4px", fontWeight: "500" }}>{d.material_name || "CONCRETE"}</td>
+              <td style={labelStyle}>Date:</td>
+              <td style={valueStyle}>{dateStr}</td>
+              <td style={{ ...labelStyle, width: "10px" }}></td>
+              <td style={labelStyle}></td>
+              <td style={valueStyle}></td>
             </tr>
+            {/* Row 2 */}
             <tr>
-              <td style={{ paddingBottom: "4px", color: "#333" }}>Time:</td>
-              <td style={{ paddingBottom: "4px", fontWeight: "500" }}>{timeStr}</td>
-              <td style={{ paddingBottom: "4px", color: "#333" }}>Supplier:</td>
-              <td style={{ paddingBottom: "4px", fontWeight: "500" }}>SRI AMMAN</td>
+              <td style={labelStyle}>Time:</td>
+              <td style={valueStyle}>{timeStr}</td>
+              <td></td>
+              <td style={labelStyle}></td>
+              <td style={valueStyle}></td>
             </tr>
+            {/* Row 3 */}
             <tr>
-              <td style={{ paddingBottom: "4px", color: "#333" }}>Ticket Number:</td>
-              <td style={{ paddingBottom: "4px", fontFamily: "monospace", fontWeight: "500" }}>
-                WS-{String(d.id).padStart(5, "0")}
-              </td>
-              <td style={{ paddingBottom: "4px", color: "#333" }}>Driver:</td>
-              <td style={{ paddingBottom: "4px", fontWeight: "bold", textTransform: "uppercase" }}>
-                {d.driver_name || "—"}
-              </td>
+              <td style={labelStyle}>Ticket Number:</td>
+              <td style={{ ...valueStyle, fontFamily: "monospace" }}>{ticketNo}</td>
+              <td></td>
+              <td style={labelStyle}>Material:</td>
+              <td style={valueStyle}>{d.material_name?.toUpperCase() || "CONCRETE"}</td>
             </tr>
+            {/* Row 4 */}
             <tr>
-              <td style={{ paddingBottom: "4px", color: "#333" }}>Challan No:</td>
-              <td style={{ paddingBottom: "4px", fontFamily: "monospace", fontWeight: "500", fontSize: "9px" }}>
-                {d.dc_number}
-              </td>
-              <td style={{ color: "#333" }}>Grade of material:</td>
-              <td style={{ fontWeight: "500" }}>{d.grade_name || "—"}</td>
+              <td style={labelStyle}>Challan No:</td>
+              <td style={{ ...valueStyle, fontSize: "9px", fontFamily: "monospace" }}>{d.dc_number}</td>
+              <td></td>
+              <td style={labelStyle}>Supplier:</td>
+              <td style={valueStyle}>SRI AMMAN</td>
             </tr>
+            {/* Row 5 */}
             <tr>
-              <td style={{ color: "#333" }}>Vehicle Number:</td>
-              <td style={{ fontWeight: "bold", textTransform: "uppercase", fontSize: "11px" }}>
-                {d.vehicle_number || "—"}
+              <td style={labelStyle}>Vehicle Number:</td>
+              <td style={{ ...valueStyle, fontWeight: "bold", fontSize: "11px" }}>
+                {d.vehicle_number?.toUpperCase() || "—"}
               </td>
               <td></td>
-              <td></td>
+              <td style={labelStyle}>Driver:</td>
+              <td style={{ ...valueStyle, textTransform: "uppercase" }}>{d.driver_name || "—"}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* ── Weight Block ─────────────────────────────────────────────── */}
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "4mm", fontSize: "11px" }}>
-          <tbody>
-            <tr>
-              <td style={{ paddingBottom: "8px", color: "#444", width: "45%" }}>Loaded Weight:</td>
-              <td style={{ paddingBottom: "8px", textAlign: "left" }}>
-                <strong style={{ fontSize: "14px" }}>{loadedWt}</strong>
-                <span style={{ fontSize: "11px", color: "#555", marginLeft: "6px" }}>kg</span>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ paddingBottom: "8px", color: "#444" }}>Empty Weight:</td>
-              <td style={{ paddingBottom: "8px" }}>
-                {emptyWt}
-                <span style={{ fontSize: "11px", color: "#555", marginLeft: "6px" }}>kg</span>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ paddingBottom: "4px", color: "#444" }}>
-                <strong style={{ fontSize: "12px" }}>Net Weight:</strong>
-              </td>
-              <td style={{ paddingBottom: "4px" }}>
-                <strong style={{ fontSize: "16px", color: "#1e3a5f" }}>{netWt}</strong>
-                <span style={{ fontSize: "11px", color: "#555", marginLeft: "6px" }}>kg</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* ── Weight rows ───────────────────────────────────────────────── */}
+        <div style={{ margin: "3mm 0" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <tbody>
+              {/* Loaded Weight */}
+              <tr>
+                <td style={{ ...labelStyle, width: "38%", paddingBottom: "8px" }}>Loaded Weight:</td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <span style={bigStyle}>{loadedWt || "—"}</span>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td style={{ width: "5%" }}></td>
+                <td style={{ ...labelStyle, width: "25%" }}></td>
+                <td></td>
+              </tr>
+              {/* Empty Weight */}
+              <tr>
+                <td style={{ ...labelStyle, paddingBottom: "8px" }}>Empty Weight:</td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <span style={{ ...R, fontSize: "11px" }}>{emptyWt || "—"}</span>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td></td>
+                <td style={labelStyle}>Grade of material:</td>
+                <td style={valueStyle}>{d.grade_name || ""}</td>
+              </tr>
+              {/* Net Weight */}
+              <tr>
+                <td style={{ ...labelStyle, paddingBottom: "8px" }}>
+                  <strong style={{ fontSize: "11px" }}>Net Weight:</strong>
+                </td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <strong style={{ ...R, fontSize: "15px" }}>{netWt || "—"}</strong>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td></td>
+                <td style={labelStyle}>Operator&nbsp; Name:</td>
+                <td style={{ ...valueStyle, textTransform: "uppercase" }}>
+                  {d.operator_name?.toUpperCase() || "ADMIN"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        {/* ── Operator + Signatures ────────────────────────────────────── */}
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+        {/* ── Signatures ─────────────────────────────────────────────────── */}
+        <table style={{ width: "100%", marginTop: "8mm" }}>
           <tbody>
             <tr>
-              <td style={{ paddingBottom: "4px", color: "#444", width: "45%" }}>Operator Name:</td>
-              <td style={{ fontWeight: "500", textTransform: "uppercase" }}>
-                {d.operator_name || "ADMIN"}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Signature lines */}
-        <table style={{ width: "100%", marginTop: "12mm" }}>
-          <tbody>
-            <tr>
-              <td style={{ width: "45%", textAlign: "left" }}>
-                <div style={{ borderTop: "1px solid #000", paddingTop: "3px", fontSize: "9px", color: "#555" }}>
-                  Client Signature
-                </div>
-              </td>
-              <td style={{ width: "10%" }}></td>
-              <td style={{ width: "45%", textAlign: "right" }}>
-                <div style={{ borderTop: "1px solid #000", paddingTop: "3px", fontSize: "9px", color: "#555" }}>
-                  Operator Signature
-                </div>
-              </td>
+              <td style={{ width: "40%", ...labelStyle }}>Client Signature</td>
+              <td style={{ width: "20%" }}></td>
+              <td style={{ width: "40%", ...labelStyle, textAlign: "right" }}>Operator Signature</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Footer line */}
-      <div style={{ borderTop: "1px solid #ddd", marginTop: "6mm", padding: "3px 8mm 0",
-        fontSize: "7px", color: "#bbb", textAlign: "center" }}>
-        SRI AMMAN CONSTRUCTION AND EQUIPMENTS — CHINNAR, SHOOLAGIRI, KRISHNAGIRI-635117
-      </div>
+      {/* ── Bottom border line ────────────────────────────────────────────── */}
+      <div style={{ borderTop: "1px solid #ccc", marginTop: "2mm" }}></div>
     </div>
   );
 }
@@ -198,7 +192,6 @@ export default function WeighmentSlip() {
 
   return (
     <div>
-      {/* Toolbar */}
       <div className="no-print flex items-center gap-3 p-4 bg-white border-b sticky top-0 z-10">
         <button className="btn-secondary flex items-center gap-1" onClick={() => navigate(-1)}>
           <ArrowLeft size={15} /> Back
@@ -206,14 +199,12 @@ export default function WeighmentSlip() {
         <span className="text-sm font-semibold text-primary">
           Weighment Slip — {data.dc_number}
         </span>
-        <span className="text-xs text-gray-400">WS-{String(data.id).padStart(5, "0")}</span>
         <button className="btn-primary flex items-center gap-1 ml-auto" onClick={handlePrint}>
           <Printer size={15} /> Print / Save PDF
         </button>
       </div>
 
-      {/* Print area */}
-      <div ref={printRef} style={{ padding: "10mm", backgroundColor: "#fff" }}>
+      <div ref={printRef} style={{ padding: "8mm", backgroundColor: "#fff" }}>
         <style>{`
           @media print {
             @page { size: A5 portrait; margin: 4mm; }

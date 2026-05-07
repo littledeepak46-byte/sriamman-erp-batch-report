@@ -12,83 +12,146 @@ const TABS = ["OUTWARD", "INWARD"];
 const today = format(new Date(), "yyyy-MM-dd");
 const nowTime = format(new Date(), "HH:mm");
 
-// ── Inward Weighment Slip print component ─────────────────────────────────────
-function InwardSlip({ rec }) {
+// ── Shared Weighment Slip (identical format for INWARD and OUTWARD) ──────────
+function WeighSlip({ rec }) {
   if (!rec) return null;
-  const dateStr = rec.weigh_date
-    ? new Date(rec.weigh_date + "T00:00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-    : "";
+
+  const dt = rec.weigh_date ? new Date(rec.weigh_date + "T00:00:00") : null;
+  const dateStr = dt
+    ? `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()}`
+    : "—";
+
+  const t = rec.weigh_time?.slice(0, 5) || "";
+  const [h, m] = t.split(":");
+  const hr = parseInt(h || 0);
+  const timeStr = t ? `${String(hr % 12 || 12).padStart(2,"0")}:${m} ${hr >= 12 ? "PM" : "AM"}` : "—";
+
+  const loadedWt = rec.gross_weight_kg ? Number(rec.gross_weight_kg).toLocaleString("en-IN") : "—";
+  const tare     = rec.tare_weight_kg  ? Number(rec.tare_weight_kg).toLocaleString("en-IN")  : "—";
+  const netWt    = rec.net_weight_kg   ? Number(rec.net_weight_kg).toLocaleString("en-IN")   : "—";
+
+  const R = { fontFamily: "Arial, sans-serif" };
+  const lbl = { ...R, fontSize: "10px", color: "#333", paddingBottom: "6px" };
+  const val = { ...R, fontSize: "10px", fontWeight: "500", paddingBottom: "6px" };
+
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "10mm", maxWidth: "140mm" }}>
-      <div style={{ textAlign: "center", borderBottom: "2px solid #1e3a5f", paddingBottom: "8px", marginBottom: "10px" }}>
-        <div style={{ fontSize: "12px", fontWeight: "bold", color: "#1e3a5f" }}>SRI AMMAN CONSTRUCTION AND EQUIPMENTS</div>
-        <div style={{ fontSize: "9px", color: "#555" }}>Chinnar, Shoolagiri, Krishnagiri – 635117</div>
-        <div style={{ fontSize: "11px", fontWeight: "bold", marginTop: "4px", letterSpacing: "2px" }}>
-          WEIGHMENT SLIP — {rec.type}
+    <div style={{ ...R, maxWidth: "175mm", margin: "0 auto", border: "1px solid #ccc" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", padding: "5mm 6mm 4mm", borderBottom: "2px solid #000" }}>
+        <svg width="58" height="58" viewBox="0 0 60 60">
+          <rect width="60" height="60" fill="white" />
+          <polygon points="8,52 30,8 52,52 44,52 30,22 16,52" fill="#2d7a2d" />
+          <polygon points="16,52 30,24 44,52 37,52 30,32 23,52" fill="white" />
+        </svg>
+        <div style={{ marginLeft: "8px" }}>
+          <div style={{ ...R, fontSize: "16px", fontWeight: "bold" }}>SRI AMMAN CONSTRUCTION AND EQUIPMENTS</div>
+          <div style={{ ...R, fontSize: "10px", marginTop: "2px" }}>CHINNAR ,SHOOLAGIRI</div>
+          <div style={{ ...R, fontSize: "10px" }}>KRISHNAGIRI-635117</div>
         </div>
       </div>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
-        <tbody>
-          {[
-            ["Ticket No", rec.ticket_number],
-            ["Date", dateStr],
-            ["Time", rec.weigh_time?.slice(0, 5)],
-            ["Vehicle No", rec.vehicle_number],
-            ["Driver", rec.driver_name || "—"],
-            ["Material", rec.material_description || "—"],
-            ["Supplier", rec.supplier || "—"],
-          ].map(([l, v]) => (
-            <tr key={l}>
-              <td style={{ padding: "4px 8px", color: "#555", width: "40%", borderBottom: "1px solid #eee" }}>{l}</td>
-              <td style={{ padding: "4px 8px", fontWeight: "500", borderBottom: "1px solid #eee" }}>{v}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ border: "1px solid #1e3a5f", borderRadius: "3px", margin: "10px 0", overflow: "hidden" }}>
-        <div style={{ background: "#1e3a5f", color: "#fff", padding: "4px 8px", fontSize: "9px", fontWeight: "bold" }}>
-          WEIGHT DETAILS
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+
+      <div style={{ padding: "4mm 6mm" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            {[
-              ["Gross Weight", `${Number(rec.gross_weight_kg).toLocaleString()} kg`],
-              ["Tare Weight", `${Number(rec.tare_weight_kg).toLocaleString()} kg`],
-            ].map(([l, v]) => (
-              <tr key={l}>
-                <td style={{ padding: "5px 8px", color: "#555", width: "50%", borderBottom: "1px solid #eee" }}>{l}</td>
-                <td style={{ padding: "5px 8px", textAlign: "right", borderBottom: "1px solid #eee" }}>{v}</td>
+            <tr>
+              <td style={lbl}>Date:</td>
+              <td style={val}>{dateStr}</td>
+              <td style={{ width: "8px" }}></td>
+              <td style={lbl}></td><td style={val}></td>
+            </tr>
+            <tr>
+              <td style={lbl}>Time:</td>
+              <td style={val}>{timeStr}</td>
+              <td></td>
+              <td style={lbl}></td><td style={val}></td>
+            </tr>
+            <tr>
+              <td style={lbl}>Ticket Number:</td>
+              <td style={{ ...val, fontFamily: "monospace" }}>{rec.ticket_number}</td>
+              <td></td>
+              <td style={lbl}>Material:</td>
+              <td style={val}>{(rec.material_description || "—").toUpperCase()}</td>
+            </tr>
+            <tr>
+              <td style={lbl}>Challan No:</td>
+              <td style={{ ...val, fontSize: "9px", fontFamily: "monospace" }}>{rec.dc_number || "—"}</td>
+              <td></td>
+              <td style={lbl}>Supplier:</td>
+              <td style={val}>{rec.supplier || "SRI AMMAN"}</td>
+            </tr>
+            <tr>
+              <td style={lbl}>Vehicle Number:</td>
+              <td style={{ ...val, fontWeight: "bold", fontSize: "11px" }}>{rec.vehicle_number?.toUpperCase() || "—"}</td>
+              <td></td>
+              <td style={lbl}>Driver:</td>
+              <td style={{ ...val, textTransform: "uppercase" }}>{rec.driver_name || "—"}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ margin: "3mm 0" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <tbody>
+              <tr>
+                <td style={{ ...lbl, width: "38%", paddingBottom: "8px" }}>Loaded Weight:</td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <strong style={{ ...R, fontSize: "13px" }}>{loadedWt}</strong>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td style={{ width: "8px" }}></td>
+                <td style={{ ...lbl, width: "28%" }}></td>
+                <td></td>
               </tr>
-            ))}
-            <tr style={{ background: "#f0f4f8" }}>
-              <td style={{ padding: "7px 8px", fontWeight: "bold", color: "#1e3a5f", fontSize: "11px" }}>Net Weight</td>
-              <td style={{ padding: "7px 8px", fontWeight: "bold", color: "#1e3a5f", fontSize: "14px", textAlign: "right" }}>
-                {Number(rec.net_weight_kg).toLocaleString()} kg
-              </td>
+              <tr>
+                <td style={{ ...lbl, paddingBottom: "8px" }}>Empty Weight:</td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <span style={{ ...R, fontSize: "11px" }}>{tare}</span>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td></td>
+                <td style={lbl}>Grade of material:</td>
+                <td style={val}></td>
+              </tr>
+              <tr>
+                <td style={{ ...lbl, paddingBottom: "8px" }}>
+                  <strong style={{ fontSize: "11px" }}>Net Weight:</strong>
+                </td>
+                <td style={{ paddingBottom: "8px" }}>
+                  <strong style={{ ...R, fontSize: "15px" }}>{netWt}</strong>
+                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
+                </td>
+                <td></td>
+                <td style={lbl}>Operator&nbsp; Name:</td>
+                <td style={{ ...val, textTransform: "uppercase" }}>ADMIN</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {rec.remarks && (
+          <div style={{ ...R, fontSize: "9px", color: "#555", marginBottom: "3mm" }}>
+            Remarks: {rec.remarks}
+          </div>
+        )}
+
+        <table style={{ width: "100%", marginTop: "8mm" }}>
+          <tbody>
+            <tr>
+              <td style={{ width: "40%", ...lbl }}>Client Signature</td>
+              <td style={{ width: "20%" }}></td>
+              <td style={{ width: "40%", ...lbl, textAlign: "right" }}>Operator Signature</td>
             </tr>
           </tbody>
         </table>
       </div>
-      {rec.remarks && <p style={{ fontSize: "9px", color: "#555", marginTop: "6px" }}>Remarks: {rec.remarks}</p>}
-      <table style={{ width: "100%", marginTop: "20px" }}>
-        <tbody>
-          <tr>
-            <td style={{ width: "50%", textAlign: "center" }}>
-              <div style={{ borderTop: "1px solid #000", marginTop: "24px", paddingTop: "3px", fontSize: "8px", color: "#555" }}>
-                Driver Signature
-              </div>
-            </td>
-            <td style={{ width: "50%", textAlign: "center" }}>
-              <div style={{ borderTop: "1px solid #000", marginTop: "24px", paddingTop: "3px", fontSize: "8px", color: "#555" }}>
-                Weigh Bridge Operator
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div style={{ borderTop: "1px solid #ccc" }}></div>
     </div>
   );
 }
+
+// keep alias for backward compat
+function InwardSlip({ rec }) { return <WeighSlip rec={rec} />; }
+
 
 // ── Outward Tab ───────────────────────────────────────────────────────────────
 function OutwardTab() {
