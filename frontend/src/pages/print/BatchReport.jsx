@@ -257,8 +257,8 @@ function M125Print({ d, rows, onActualChange }) {
       </table>
 
       {/* ══ MATERIAL TABLE — black outer border, gray dotted inner ══════════ */}
-      <div style={{ border: OUTER, marginBottom: "0" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed",
+        outline: OUTER, marginBottom: "0" }}>
         <thead>
           {/* Row 13 — Category header — compact (PDF ref: ~11pt) */}
           <tr style={{ height: "11pt" }}>
@@ -436,7 +436,6 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
         </tbody>
       </table>
-      </div>{/* end black outer border wrapper */}
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
@@ -464,13 +463,13 @@ function M125Print({ d, rows, onActualChange }) {
   );
 }
 
-// ── IC: Info cell helper (bold label : value, no cell borders) ────────────────
+// ── IC: Info cell helper — fixed-width label so colons align in a straight line
 function IC({ label, value, bold }) {
   return (
     <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "9pt",
       verticalAlign: "middle", width: "33%" }}>
-      <span style={{ fontWeight: "bold" }}>{label}</span>
-      <span style={{ color: "#555" }}> : </span>
+      <span style={{ fontWeight: "bold", display: "inline-block", minWidth: "96px" }}>{label}</span>
+      <span> : </span>
       <span style={{ fontWeight: bold ? "bold" : "normal" }}>{value ?? "—"}</span>
     </td>
   );
