@@ -346,22 +346,15 @@ function M125Print({ d, rows, onActualChange }) {
               })}
             </tr>,
 
-            /* Row 3 of 5 — Correction % (from PDF):
-               Aggregate cols → "0.00"  |  Admix cols → "0.00"
-               Cement/Water/Silica cols → "0"                    */
+            /* Row 3 of 5 — Moisture correction row (PDF): always hardcoded.
+               Aggregate + Admix cols → "0.00" | Cement/Water/Silica → "0"
+               This is machine moisture data we don't track — never calculated. */
             <tr key={`c${bIdx}`} style={{ height: "12pt" }}>
-              {cols.map((c, i) => {
-                const diff  = parseFloat(row[c.key + "_actual"] || 0) - batchTgt[i];
-                const isAgg = AGG_KEYS.has(c.key);
-                const show  = diff === 0
-                  ? (isAgg || c.dec ? "0.00" : "0")
-                  : (isAgg || c.dec ? diff.toFixed(2) : fv(diff));
-                return (
-                  <td key={c.key} style={{ ...tc, width: c.w, color: "#555", fontSize: "8pt" }}>
-                    {show}
-                  </td>
-                );
-              })}
+              {cols.map((c) => (
+                <td key={c.key} style={{ ...tc, width: c.w, color: "#555", fontSize: "8pt" }}>
+                  {AGG_KEYS.has(c.key) || c.dec ? "0.00" : "0"}
+                </td>
+              ))}
             </tr>,
 
             /* Row 4 of 5 — Second correction row (from PDF):
