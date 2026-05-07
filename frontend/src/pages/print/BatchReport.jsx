@@ -201,7 +201,7 @@ function M125Print({ d, rows, onActualChange }) {
 
   return (
     <div style={{ fontFamily: F, fontSize: fs, backgroundColor: "#fff",
-      padding: "4mm", boxSizing: "border-box" }}>
+      padding: "4mm 8mm", boxSizing: "border-box" }}>
 
       {/* ══ HEADER — Logo (top-left) + Company name (center) ════════════════ */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "3px" }}>
@@ -239,7 +239,7 @@ function M125Print({ d, rows, onActualChange }) {
             <IC label="Production Qty" value={prodQty.toFixed(2)} />
           </tr>
           <tr>
-            <IC label="Order Number"   value={d.dc_number} />
+            <IC label="Order Number"   value={d.dc_number || "—"} />
             <IC label="Truck Number"   value={d.vehicle_number} />
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
@@ -559,7 +559,7 @@ function CP30Print({ d, rows, onActualChange }) {
             ["Recipe Name",                  d.grade_name,           "Mixer Capacity",      `${MAX_BATCH["CP30"]} M³`],
             ["Truck Number",                 d.vehicle_number,       "Batch Size",          <b>{batchSize} M³</b>],
             ["Truck Driver",                 d.driver_name,          "", ""],
-            ["Order Number",                 d.dc_number,            "", ""],
+            ["Order Number",                 d.dc_number || "—",     "", ""],
             ["Batcher Name",                 "Stetter",              "", ""],
           ].map(([l1,v1,l2,v2], i) => (
             <tr key={i}>
