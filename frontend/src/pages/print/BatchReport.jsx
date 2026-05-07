@@ -89,13 +89,15 @@ const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
                whiteSpace: "pre-line" };
 const CAT  = { ...TH, fontSize: "7.5px", borderBottom: B1 };
 
-// ── Schwing Stetter Logo ──────────────────────────────────────────────────────
-function Logo({ size = 48 }) {
+// ── Schwing Stetter Logo — dark green (left) + light green (right) ────────────
+function Logo({ size = 52 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" style={{ display: "block" }}>
-      <rect width="48" height="48" fill="white" />
-      <polygon points="5,43 16,5 28,5 17,43" fill="#1a6e1a" />
-      <polygon points="22,43 33,5 45,5 34,43" fill="#2c9e2c" />
+    <svg width={size} height={size} viewBox="0 0 52 52" style={{ display: "block" }}>
+      <rect width="52" height="52" fill="white" />
+      {/* Dark green diagonal stripe — left */}
+      <polygon points="4,47 14,5 26,5 16,47" fill="#1a5c1a" />
+      {/* Light green diagonal stripe — right */}
+      <polygon points="26,47 36,5 48,5 38,47" fill="#6abf6a" />
     </svg>
   );
 }
@@ -118,9 +120,11 @@ function IRR({ label, value, bold }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// M1.25 Print Template — matches MCI 550 Statistical Report exactly
-// ══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// M1.25 Print Template — Design Guide compliant
+// A4 Portrait | Dark-green + Light-green logo | Grey headers
+// Light-green totals | Red diff% | No borders in info section
+// ═══════════════════════════════════════════════════════════════════════════
 function M125Print({ d, rows, onActualChange }) {
   const cols  = COLS_M125;
   const dm    = d.design_mix;
@@ -128,141 +132,136 @@ function M125Print({ d, rows, onActualChange }) {
   const cats  = catGroups(cols);
   const NCOLS = cols.length;
 
-  // Date format: M/DD/YYYY  (matches PDF: 1/14/2026)
+  // ── Derived data ─────────────────────────────────────────────────────────
   const dateStr = d.delivery_date
     ? (() => {
         const dt = new Date(d.delivery_date + "T00:00:00");
         return `${dt.getMonth() + 1}/${String(dt.getDate()).padStart(2,"0")}/${dt.getFullYear()}`;
       })()
     : "—";
-  const timeStr = d.delivery_time?.slice(0, 8) || "—";
-  const printDate = (() => {
-    const n = new Date();
-    const mo = String(n.getMonth()+1).padStart(2,"0");
-    const dy = String(n.getDate()).padStart(2,"0");
-    const yr = n.getFullYear();
-    const hh = String(n.getHours()).padStart(2,"0");
-    const mm = String(n.getMinutes()).padStart(2,"0");
-    const ss = String(n.getSeconds()).padStart(2,"0");
-    const ap = n.getHours() >= 12 ? "PM" : "AM";
-    return `${mo}/${dy}/${yr} ${hh}:${mm}:${ss} ${ap}`;
-  })();
+  const timeStr   = d.delivery_time?.slice(0, 8) || "—";
+  const orderedQty = parseFloat(d.quantity_m3);
+  const prodQty    = batchSize * numBatches;
+  const withLoad   = parseFloat(d.cumulative_qty_m3 || 0);
 
-  // Recipe target per m³ (base values from design mix)
-  const recPerM3 = cols.map(c => parseFloat(dm?.[c.key] || 0));
-
-  // Per-batch target (recipe × batch size)
-  const tgtPerBatch = recPerM3.map(v => c => {
-    // find col index
-    return true;
-  });
-  const batchTgt = cols.map(c => {
+  const recPerM3   = cols.map(c => parseFloat(dm?.[c.key] || 0));
+  const batchTgt   = cols.map(c => {
     const v = parseFloat(dm?.[c.key] || 0);
     return c.dec ? Math.round(v * batchSize * 100) / 100 : Math.round(v * batchSize);
   });
-
-  // Set totals = batchTgt × numBatches
-  const setTotals  = batchTgt.map(v => Math.round(v * numBatches * (Number.isInteger(v) ? 1 : 100)) / (Number.isInteger(v) ? 1 : 100));
-  // Actual totals
-  const actTotals  = cols.map(c => rows.reduce((s, r) => s + (parseFloat(r[c.key + "_actual"] || 0)), 0));
+  const setTotals  = batchTgt.map(v => v * numBatches);
+  const actTotals  = cols.map(c => rows.reduce((s, r) => s + parseFloat(r[c.key + "_actual"] || 0), 0));
   const massSet    = setTotals.reduce((a, b) => a + b, 0);
   const massAct    = actTotals.reduce((a, b) => a + b, 0);
   const massRecTgt = recPerM3.reduce((a, b) => a + b, 0) * batchSize;
 
-  function diffPct(s, a) {
-    if (s === 0) return "0";
-    return ((a - s) / s * 100).toFixed(2);
-  }
+  const diffPct = (s, a) => s === 0 ? "0" : ((a - s) / s * 100).toFixed(2);
 
-  const orderedQty   = parseFloat(d.quantity_m3);
-  const prodQty      = batchSize * numBatches;
-  const withLoad     = parseFloat(d.cumulative_qty_m3 || 0);
+  // ── Design tokens ─────────────────────────────────────────────────────────
+  const F    = FONT;
+  const fs   = "7px";
+  const pad  = "1px 2px";
+  const bdr  = "0.5px solid #999";
+
+  // Table cell base
+  const tc  = { border: bdr, padding: pad, fontSize: fs, textAlign: "right",
+                fontFamily: F, whiteSpace: "nowrap" };
+  // Header cell — grey background, bold, centered
+  const thc = { ...tc, textAlign: "center", fontWeight: "bold",
+                backgroundColor: "#d3d3d3", whiteSpace: "pre-line" };
+  // Category header — slightly darker grey
+  const chc = { ...thc, backgroundColor: "#bdbdbd", fontSize: "7.5px" };
+  // Recipe targets row — white, bold
+  const rtr = { ...tc, fontWeight: "bold", backgroundColor: "#fff" };
+  // Total rows — light green background
+  const tgr = { ...tc, fontWeight: "bold", backgroundColor: "#d4edda" };
+  // Difference row — red text
+  const dfr = { ...tc, fontWeight: "bold", color: "red" };
+  // Label-band cell (full-width section header)
+  const lbl = { ...tc, textAlign: "left", backgroundColor: "#f0f0f0",
+                fontStyle: "italic", border: bdr };
 
   return (
-    <div style={{ fontFamily: FONT, fontSize: "8px", backgroundColor: "#fff", padding: "4mm" }}>
+    <div style={{ fontFamily: F, fontSize: fs, backgroundColor: "#fff",
+      padding: "5mm 5mm 4mm", boxSizing: "border-box" }}>
 
-      {/* ═══ HEADER ══════════════════════════════════════════════════════════ */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "3px" }}>
+      {/* ══ 2. HEADER ════════════════════════════════════════════════════════ */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "4px" }}>
+        {/* Logo — top-left */}
+        <div style={{ flexShrink: 0, marginRight: "8px" }}>
+          <Logo size={52} />
+        </div>
+        {/* Company name — centered */}
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: "16px", fontWeight: "bold", fontFamily: F,
+            lineHeight: "1.15", letterSpacing: "0.5px" }}>
+            SRI AMMAN READY MIX CONCRETE
+          </div>
+        </div>
+      </div>
+
+      {/* ══ 3. INFO SECTION — 3 columns × 6 rows, no cell borders ══════════ */}
+      <table style={{ width: "100%", borderCollapse: "collapse",
+        marginBottom: "4px", border: "0.5px solid #aaa" }}>
         <tbody>
+          {/* Row 1 */}
           <tr>
-            <td style={{ width: "52px", verticalAlign: "middle" }}>
-              <Logo size={48} />
-            </td>
-            <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-              <div style={{ fontSize: "15px", fontWeight: "bold", fontFamily: FONT, lineHeight: "1.2" }}>
-                SRI AMMAN READY MIX
-              </div>
-              <div style={{ fontSize: "14px", fontWeight: "bold", fontFamily: FONT }}>CONCRETE</div>
-            </td>
+            <InfoCell label="Batch Date"       value={dateStr} />
+            <InfoCell label="Batch Start Time" value={timeStr} />
+            <InfoCell label="Batch End Time"   value="—" />
+          </tr>
+          {/* Row 2 */}
+          <tr>
+            <InfoCell label="Batch Number"  value={d.batch_number} />
+            <InfoCell label="Recipe Code"   value={d.grade_name} />
+            <InfoCell label="Ordered Qty"   value={`${orderedQty.toFixed(2)}`} />
+          </tr>
+          {/* Row 3 */}
+          <tr>
+            <InfoCell label="Batcher Name"  value="Stetter" />
+            <InfoCell label="Recipe Name"   value={d.grade_name} />
+            <InfoCell label="Production Qty" value={`${prodQty.toFixed(2)}`} />
+          </tr>
+          {/* Row 4 */}
+          <tr>
+            <InfoCell label="Order Number"  value={d.dc_number} />
+            <InfoCell label="Truck Number"  value={d.vehicle_number} />
+            <InfoCell label="Adj/Manual Qty" value="0.00" />
+          </tr>
+          {/* Row 5 */}
+          <tr>
+            <InfoCell label="Customer"      value={d.customer_name} />
+            <InfoCell label="Truck Driver"  value={d.driver_name} />
+            <InfoCell label="With This Load" value={`${withLoad.toFixed(2)}`} />
+          </tr>
+          {/* Row 6 */}
+          <tr>
+            <InfoCell label="Site"          value={d.site_location || d.site_name} />
+            <InfoCell label="Batch Size"    value={`${batchSize}`} bold />
+            <InfoCell label="Mixer Capacity" value={`${MAX_BATCH["M1.25"]}`} />
           </tr>
         </tbody>
       </table>
 
-      {/* ═══ DATE / TIME ROW ════════════════════════════════════════════════ */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "3px" }}>
-        <tbody>
-          <tr>
-            <td style={{ width: "33%", fontFamily: FONT, fontSize: "8.5px" }}>
-              <b>Batch Date</b>&nbsp;&nbsp;: {dateStr}
-            </td>
-            <td style={{ width: "34%", textAlign: "center", fontFamily: FONT, fontSize: "8.5px" }}>
-              <b>Batch Start Time</b>&nbsp;: {timeStr}
-            </td>
-            <td style={{ width: "33%", textAlign: "right", fontFamily: FONT, fontSize: "8.5px" }}>
-              <b>Batch End Time</b>&nbsp;: —
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* ═══ INFO TABLE ══════════════════════════════════════════════════════ */}
-      <table style={{ width: "100%", borderCollapse: "collapse", border: B1, marginBottom: "4px" }}>
-        <tbody>
-          <tr>
-            <td style={{ border: B1, padding: "2px 5px", width: "30%", verticalAlign: "top" }}>
-              <IR label="Batch Number"  value={d.batch_number} />
-              <IR label="Batcher Name"  value="Stetter" />
-              <IR label="Order Number"  value={d.dc_number} />
-              <IR label="Customer"      value={d.customer_name} />
-              <IR label="Site"          value={d.site_location || d.site_name} />
-            </td>
-            <td style={{ border: B1, padding: "2px 5px", width: "33%", verticalAlign: "top" }}>
-              <IR label="Recipe Code"   value={d.grade_name} />
-              <IR label="Recipe Name"   value={d.grade_name} />
-              <IR label="Truck Number"  value={d.vehicle_number} />
-              <IR label="Truck Driver"  value={d.driver_name} />
-            </td>
-            <td style={{ border: B1, padding: "2px 5px", width: "37%", verticalAlign: "top" }}>
-              <IRR label="Ordered Qty"    value={orderedQty.toFixed(2)} />
-              <IRR label="Production Qty" value={prodQty.toFixed(2)} />
-              <IRR label="Adj/Manual Qty" value="0.00" />
-              <IRR label="With This Load" value={withLoad.toFixed(2)} />
-              <IRR label="Batch Size"     value={batchSize} bold />
-              <IRR label="Mixer Capacity" value={MAX_BATCH["M1.25"]} />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* ═══ INGREDIENT TABLE ════════════════════════════════════════════════ */}
+      {/* ══ 4. MATERIAL TABLE ════════════════════════════════════════════════ */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
-          {/* Category header row */}
+          {/* Category header row — grey bg, bold */}
           <tr>
             {cats.map((g, i) => (
-              <th key={i} colSpan={g.span} style={CAT}>{g.cat}</th>
+              <th key={i} colSpan={g.span} style={chc}>{g.cat}</th>
             ))}
           </tr>
-          {/* Column name row */}
+          {/* Column names row — grey bg, bold */}
           <tr>
             {cols.map(c => (
-              <th key={c.key} style={{ ...TH, width: c.w + "px" }}>{c.hdr}</th>
+              <th key={c.key} style={{ ...thc, width: c.w + "px" }}>{c.hdr}</th>
             ))}
           </tr>
-          {/* Recipe target per m³ */}
+          {/* Recipe targets row — white bg, bold */}
           <tr>
             {recPerM3.map((v, i) => (
-              <td key={i} style={{ ...TD, width: cols[i].w + "px" }}>
+              <td key={i} style={{ ...rtr, width: cols[i].w + "px" }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
@@ -270,64 +269,141 @@ function M125Print({ d, rows, onActualChange }) {
         </thead>
 
         <tbody>
-
-          {/* ── Mass of Recipe Targets ──────────────────────────────────── */}
+          {/* Mass of Recipe Targets — right aligned */}
           <tr>
             <td colSpan={NCOLS - 1}
-              style={{ ...TD, textAlign: "right", fontStyle: "italic", fontSize: "7px", border: "none" }}>
+              style={{ ...tc, textAlign: "right", fontStyle: "italic", border: "none",
+                fontSize: "6.5px", paddingRight: "4px" }}>
               Mass of Recipe Targets in Kgs.
             </td>
-            <td style={{ ...TD, fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</td>
+            <td style={{ ...tc, fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</td>
           </tr>
 
-          {/* ── Total Set Weight ─────────────────────────────────────────── */}
+          {/* ── Label band ───────────────────────────────────────────────── */}
+          <tr>
+            <td colSpan={NCOLS} style={lbl}>
+              Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
+            </td>
+          </tr>
+
+          {/* ── Per-batch rows (4 rows × numBatches) ─────────────────────── */}
+          {rows.map((row, bIdx) => [
+
+            /* Row 1 — Target (Design Mix × Batch Size) */
+            <tr key={`t${bIdx}`}>
+              {cols.map((c, i) => (
+                <td key={c.key} style={{ ...tc, width: c.w + "px" }}>
+                  {batchTgt[i] === 0 ? "0.00"
+                    : c.dec ? batchTgt[i].toFixed(c.dec) : batchTgt[i].toFixed(2)}
+                </td>
+              ))}
+            </tr>,
+
+            /* Row 2 — Actual (editable, slight variation like machine output) */
+            <tr key={`a${bIdx}`}>
+              {cols.map((c, i) => {
+                const act   = parseFloat(row[c.key + "_actual"] || 0);
+                const tgt   = batchTgt[i];
+                const offBy = tgt > 0 ? Math.abs(act - tgt) / tgt : 0;
+                return (
+                  <td key={c.key} style={{ ...tc, width: c.w + "px",
+                    color: offBy > 0.05 ? "red" : "black", padding: "0 1px" }}>
+                    <input
+                      className="no-print"
+                      type="number" step="0.001"
+                      value={row[c.key + "_actual"] ?? 0}
+                      onChange={e => onActualChange(bIdx, c.key, e.target.value)}
+                      style={{ width: "100%", border: "none", textAlign: "right",
+                        fontSize: fs, padding: 0, background: "transparent", outline: "none" }}
+                    />
+                    <span className="print-only" style={{ display: "none" }}>
+                      {act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : act.toFixed(2)}
+                    </span>
+                  </td>
+                );
+              })}
+            </tr>,
+
+            /* Row 3 — Correction (difference between actual and target) */
+            <tr key={`c${bIdx}`}>
+              {cols.map((c, i) => {
+                const act = parseFloat(row[c.key + "_actual"] || 0);
+                const diff = act - batchTgt[i];
+                return (
+                  <td key={c.key} style={{ ...tc, width: c.w + "px",
+                    color: "#555", fontSize: "6.5px" }}>
+                    {diff === 0 ? "0.00" : diff.toFixed(2)}
+                  </td>
+                );
+              })}
+            </tr>,
+
+            /* Row 4 — Blank separator */
+            <tr key={`e${bIdx}`}>
+              {cols.map((c, i) => (
+                <td key={c.key} style={{ ...tc, width: c.w + "px",
+                  borderBottom: "0.5px solid #bbb" }}>
+                </td>
+              ))}
+            </tr>,
+          ])}
+
+          {/* ══ 6. TOTALS SECTION ══════════════════════════════════════════ */}
+
+          {/* Total Set Weight — light green background */}
           <tr>
             <td colSpan={NCOLS}
-              style={{ ...TD, textAlign: "left", fontStyle: "italic", fontSize: "7.5px" }}>
+              style={{ ...lbl, backgroundColor: "#d4edda", fontStyle: "normal",
+                fontWeight: "bold" }}>
               Total Set Weight in Kgs.
             </td>
           </tr>
           <tr>
             {cols.map((c, i) => (
-              <td key={c.key} style={{ ...TD, width: c.w + "px", fontWeight: "bold" }}>
+              <td key={c.key} style={{ ...tgr, width: c.w + "px" }}>
                 {setTotals[i] === 0 ? "0" : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
               </td>
             ))}
           </tr>
+          {/* Mass of Total Set Weight — right aligned */}
           <tr>
             <td colSpan={NCOLS - 1}
-              style={{ ...TD, textAlign: "right", fontStyle: "italic", fontSize: "7px", border: "none" }}>
+              style={{ ...tc, textAlign: "right", fontStyle: "italic", border: "none",
+                fontSize: "6.5px", paddingRight: "4px" }}>
               Mass of Total Set Weight in Kgs.
             </td>
-            <td style={{ ...TD, fontWeight: "bold" }}>{massSet.toFixed(2)}</td>
+            <td style={{ ...tc, fontWeight: "bold" }}>{massSet.toFixed(2)}</td>
           </tr>
 
-          {/* ── Total Actual Weight ─────────────────────────────────────── */}
+          {/* Total Actual Weight — light green background */}
           <tr>
             <td colSpan={NCOLS}
-              style={{ ...TD, textAlign: "left", fontStyle: "italic", fontSize: "7.5px" }}>
+              style={{ ...lbl, backgroundColor: "#d4edda", fontStyle: "normal",
+                fontWeight: "bold" }}>
               Total Actual Weight in Kgs.
             </td>
           </tr>
           <tr>
             {cols.map((c, i) => (
-              <td key={c.key} style={{ ...TD, width: c.w + "px", fontWeight: "bold" }}>
+              <td key={c.key} style={{ ...tgr, width: c.w + "px" }}>
                 {actTotals[i] === 0 ? "0" : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
               </td>
             ))}
           </tr>
+          {/* Mass of Total Actual Weight — right aligned */}
           <tr>
             <td colSpan={NCOLS - 1}
-              style={{ ...TD, textAlign: "right", fontStyle: "italic", fontSize: "7px", border: "none" }}>
+              style={{ ...tc, textAlign: "right", fontStyle: "italic", border: "none",
+                fontSize: "6.5px", paddingRight: "4px" }}>
               Mass of Total Actual Weight in Kgs.
             </td>
-            <td style={{ ...TD, fontWeight: "bold" }}>{massAct.toFixed(2)}</td>
+            <td style={{ ...tc, fontWeight: "bold" }}>{massAct.toFixed(2)}</td>
           </tr>
 
-          {/* ── Difference in Percentage ─────────────────────────────────── */}
+          {/* Difference in Percentage — red text */}
           <tr>
             <td colSpan={NCOLS}
-              style={{ ...TD, textAlign: "left", fontStyle: "italic", fontSize: "7.5px" }}>
+              style={{ ...lbl, fontStyle: "normal", fontWeight: "bold", color: "red" }}>
               Difference in Percentage
             </td>
           </tr>
@@ -335,116 +411,54 @@ function M125Print({ d, rows, onActualChange }) {
             {cols.map((c, i) => {
               const pct = parseFloat(diffPct(setTotals[i], actTotals[i]));
               return (
-                <td key={c.key} style={{
-                  ...TD, width: c.w + "px",
-                  color: Math.abs(pct) > 2 ? "red" : "black", fontWeight: "bold",
-                }}>
+                <td key={c.key} style={{ ...dfr, width: c.w + "px" }}>
                   {pct === 0 ? "0" : pct.toFixed(2)}
                 </td>
               );
             })}
           </tr>
-
-          {/* ── Target & Actual section header ───────────────────────────── */}
-          <tr>
-            <td colSpan={NCOLS}
-              style={{ ...TD, textAlign: "left", fontSize: "7px", fontStyle: "italic",
-                padding: "2px 3px", borderTop: "2px solid #000" }}>
-              Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
-            </td>
-          </tr>
-
-          {/* ── Per-batch rows (4 rows each) ─────────────────────────────── */}
-          {rows.map((row, bIdx) => {
-            const isLastBatch = bIdx === rows.length - 1;
-            return [
-              /* Row 1: Target (with moisture correction ≈ batchTgt) */
-              <tr key={`t${bIdx}`}>
-                {cols.map((c, i) => (
-                  <td key={c.key} style={{ ...TD, width: c.w + "px",
-                    borderTop: bIdx > 0 ? "0" : B1 }}>
-                    {batchTgt[i] === 0 ? "0.00" : c.dec ? batchTgt[i].toFixed(c.dec) : batchTgt[i].toFixed(2)}
-                  </td>
-                ))}
-              </tr>,
-
-              /* Row 2: Actual (editable) */
-              <tr key={`a${bIdx}`}>
-                {cols.map((c, i) => {
-                  const act = parseFloat(row[c.key + "_actual"] || 0);
-                  const tgt = batchTgt[i];
-                  const offBy = tgt > 0 ? Math.abs(act - tgt) / tgt : 0;
-                  return (
-                    <td key={c.key} style={{ ...TD, width: c.w + "px",
-                      color: offBy > 0.05 ? "red" : "black", padding: "0 1px" }}>
-                      <input
-                        className="no-print"
-                        type="number" step="0.001"
-                        value={row[c.key + "_actual"] ?? 0}
-                        onChange={e => onActualChange(bIdx, c.key, e.target.value)}
-                        style={{ width: "100%", border: "none", textAlign: "right",
-                          fontSize: "7.5px", padding: 0, background: "transparent", outline: "none" }}
-                      />
-                      <span className="print-only" style={{ display: "none" }}>
-                        {act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : act.toFixed(2)}
-                      </span>
-                    </td>
-                  );
-                })}
-              </tr>,
-
-              /* Row 3: Moisture correction % */
-              <tr key={`c${bIdx}`}>
-                {cols.map((c, i) => (
-                  <td key={c.key} style={{ ...TD, width: c.w + "px", color: "#444", fontSize: "7px" }}>
-                    0.00
-                  </td>
-                ))}
-              </tr>,
-
-              /* Row 4: Empty / spacer */
-              <tr key={`e${bIdx}`}
-                style={{ borderBottom: isLastBatch ? "none" : "1px solid #888" }}>
-                {cols.slice(0, 6).map((c, i) => (
-                  <td key={c.key} style={{ ...TD, width: c.w + "px", color: "#aaa", fontSize: "6.5px" }}>
-                    0.00
-                  </td>
-                ))}
-                {cols.slice(6).map((c, i) => (
-                  <td key={c.key} style={{ border: B1, padding: "1px 2px",
-                    fontSize: "6.5px", textAlign: "right", color: "#aaa" }}>
-                  </td>
-                ))}
-              </tr>,
-            ];
-          })}
         </tbody>
       </table>
 
-      {/* ═══ FOOTER ══════════════════════════════════════════════════════════ */}
+      {/* ══ 7. FOOTER ════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
-        borderTop: "1px solid #000", marginTop: "4px", fontSize: "7px", fontFamily: FONT }}>
+        borderTop: "0.5px solid #666", marginTop: "4px" }}>
         <tbody>
           <tr>
-            <td style={{ width: "30%", verticalAlign: "middle" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <Logo size={18} />
+            {/* Left — Schwing Stetter + MCI 550 */}
+            <td style={{ width: "40%", verticalAlign: "top",
+              fontFamily: F, fontSize: "7px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                <Logo size={16} />
                 <span style={{ fontWeight: "bold" }}>Schwing Stetter</span>
               </div>
+              <div style={{ fontSize: "6.5px", color: "#444", marginTop: "1px" }}>
+                MCI 550 ver 1.0 Statistical Report
+              </div>
             </td>
-            <td style={{ textAlign: "center" }}>
-              Page1&nbsp;&nbsp;&nbsp;&nbsp;MCI 550 ver 1.0 Statistical Report
+            {/* Center — Page 1 */}
+            <td style={{ textAlign: "center", fontFamily: F, fontSize: "7px",
+              fontWeight: "bold" }}>
+              Page 1
             </td>
-            <td style={{ textAlign: "right" }}>
-              Print Date : {printDate}
-            </td>
-            <td style={{ textAlign: "right", fontWeight: "bold" }}>
-              SRI AMMAN READY MIX CONCRETE
-            </td>
+            {/* Right — empty per design guide */}
+            <td style={{ width: "40%" }}></td>
           </tr>
         </tbody>
       </table>
     </div>
+  );
+}
+
+// ── Info cell helper (no cell borders — just layout) ──────────────────────────
+function InfoCell({ label, value, bold }) {
+  return (
+    <td style={{ padding: "2px 6px", fontFamily: FONT, fontSize: "8px",
+      verticalAlign: "top", width: "33%" }}>
+      <span style={{ fontWeight: "bold" }}>{label}</span>
+      <span>&nbsp;:&nbsp;</span>
+      <span style={{ fontWeight: bold ? "bold" : "normal" }}>{value ?? "—"}</span>
+    </td>
   );
 }
 
@@ -701,7 +715,7 @@ export default function BatchReport() {
       <div ref={printRef} style={{ backgroundColor: "#fff" }}>
         <style>{`
           @media print {
-            @page { size: A4 landscape; margin: 4mm; }
+            @page { size: A4 portrait; margin: 4mm; }
             body { margin: 0; }
             .no-print  { display: none !important; }
             .print-only { display: inline !important; }
