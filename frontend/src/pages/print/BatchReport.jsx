@@ -168,20 +168,19 @@ function M125Print({ d, rows, onActualChange }) {
     return ((a - s) / s * 100).toFixed(2);
   };
 
-  // ── Design tokens — mirrors Excel exactly ─────────────────────────────────
-  // Excel uses 16pt for ALL cells. With fit-to-page scale ≈ 0.636,
-  // actual printed size ≈ 10pt. We use 9pt to be safe with HTML margins.
-  const F   = FONT;
-  const fs  = "9pt";              // 16pt × 0.636 ≈ 10pt → use 9pt
-  const DOT = "1px dotted #aaa"; // gray dotted border (Excel style)
-  const PAD = "1pt 2pt";         // match Excel cell padding in pt
+  // ── Design tokens ─────────────────────────────────────────────────────────
+  const F     = FONT;
+  const fs    = "9pt";
+  const INNER = "1px dotted #aaa";   // gray dotted — inner cell dividers
+  const OUTER = "2px solid #000";    // black solid  — outer table border
+  const PAD   = "2pt 3pt";           // comfortable inner padding for values
 
-  // Base cell — 9pt, white bg, right-aligned
-  const tc  = { border: DOT, padding: PAD, fontSize: fs, textAlign: "right",
+  // Base data cell — inner border, proper padding, right-aligned value
+  const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "right",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
-  // Header cells — bold, centered (category & column name rows)
+  // Header cells — bold, centered
   const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "pre-line" };
-  // Category row — same as thc (bold)
+  // Category row
   const chc = { ...thc };
   // Recipe per m³ row: bold
   const rtr = { ...tc, fontWeight: "bold" };
@@ -247,7 +246,8 @@ function M125Print({ d, rows, onActualChange }) {
         </tbody>
       </table>
 
-      {/* ══ MATERIAL TABLE — rows 13–18 of Excel ════════════════════════════ */}
+      {/* ══ MATERIAL TABLE — black outer border, gray dotted inner ══════════ */}
+      <div style={{ border: OUTER, marginBottom: "0" }}>
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header (height 16.5 pt from Excel) */}
@@ -426,6 +426,7 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
         </tbody>
       </table>
+      </div>{/* end black outer border wrapper */}
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
