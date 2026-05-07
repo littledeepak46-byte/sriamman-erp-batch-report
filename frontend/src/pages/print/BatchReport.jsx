@@ -89,7 +89,7 @@ function fv2(v) { return parseFloat(v || 0).toFixed(2); }
 // ── Shared cell / font styles ─────────────────────────────────────────────────
 const FONT = "Arial, Helvetica, sans-serif";
 const B1   = "1px solid #000";
-const TD   = { border: B1, padding: "1px 2px", fontSize: "9pt", textAlign: "right",
+const TD   = { border: B1, padding: "1px 2px", fontSize: "9pt", textAlign: "center",
                fontFamily: FONT, whiteSpace: "nowrap" };
 const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
                whiteSpace: "pre-line" };
@@ -186,7 +186,7 @@ function M125Print({ d, rows, onActualChange }) {
   const PAD   = "2pt 3pt";           // comfortable inner padding for values
 
   // Base data cell — inner border, proper padding, right-aligned value
-  const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "right",
+  const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
   // Header cells — bold, centered
   const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "pre-line" };
@@ -337,7 +337,7 @@ function M125Print({ d, rows, onActualChange }) {
                       type="number" step="0.001"
                       value={row[c.key + "_actual"] ?? 0}
                       onChange={e => onActualChange(bIdx, c.key, e.target.value)}
-                      style={{ width: "100%", border: "none", textAlign: "right",
+                      style={{ width: "100%", border: "none", textAlign: "center",
                         fontSize: fs, padding: 0, background: "transparent", outline: "none" }}
                     />
                     <span className="print-only" style={{ display: "none" }}>{disp}</span>
@@ -602,7 +602,7 @@ function CP30Print({ d, rows, onActualChange }) {
                       type="number" step="0.001"
                       value={row[c.key + "_actual"] ?? 0}
                       onChange={e => onActualChange(bIdx, c.key, e.target.value)}
-                      style={{ width: "100%", border: "none", textAlign: "right",
+                      style={{ width: "100%", border: "none", textAlign: "center",
                         fontSize: "9pt", padding: 0, background: "transparent", outline: "none" }}
                     />
                     <span className="print-only" style={{ display: "none" }}>
