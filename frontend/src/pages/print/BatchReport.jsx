@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useNavigate, useParams } from "react-router-dom";
-import { Printer, ArrowLeft, Save, FileDown, AlertCircle } from "lucide-react";
+import { Printer, ArrowLeft, Save } from "lucide-react";
 import api from "../../api/axios";
 import { usePrintData } from "../../hooks/usePrintData";
 
@@ -625,11 +625,9 @@ export default function BatchReport() {
   const navigate  = useNavigate();
   const { data, isLoading, error } = usePrintData();
   const printRef  = useRef();
-  const [saving,       setSaving]      = useState(false);
-  const [saved,        setSaved]       = useState(false);
-  const [actuals,      setActuals]     = useState(null);
-  const [pdfLoading,   setPdfLoading]  = useState(false);
-  const [pdfError,     setPdfError]    = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [actuals, setActuals] = useState(null);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -679,28 +677,6 @@ export default function BatchReport() {
     } finally { setSaving(false); }
   }
 
-  async function downloadExcelPdf() {
-    setPdfLoading(true);
-    setPdfError("");
-    try {
-      const res = await api.get(`/batch-pdf/${id}`, { responseType: "blob" });
-      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const a   = document.createElement("a");
-      a.href    = url;
-      a.target  = "_blank";
-      a.rel     = "noopener noreferrer";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      const msg = e.response?.status === 503
-        ? "Excel template not found. Place New_Batching_Slip.xlsx in backend/templates/"
-        : e.response?.data
-            ? await e.response.data.text?.() || "PDF generation failed."
-            : "PDF generation failed.";
-      setPdfError(msg);
-    } finally { setPdfLoading(false); }
-  }
-
   return (
     <div>
       {/* Toolbar */}
@@ -715,29 +691,11 @@ export default function BatchReport() {
           <button className="btn-secondary flex items-center gap-1" onClick={saveActuals} disabled={saving}>
             <Save size={14} /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save Actuals"}
           </button>
-          {/* Excel → PDF via LibreOffice (exact template output) */}
-          {data.plant_type === "M1.25" && (
-            <button
-              className="btn-accent flex items-center gap-1"
-              onClick={downloadExcelPdf}
-              disabled={pdfLoading}
-              title="Generate PDF from Excel template (New_Batching_Slip.xlsx)"
-            >
-              <FileDown size={15} />
-              {pdfLoading ? "Generating…" : "Excel PDF"}
-            </button>
-          )}
           <button className="btn-primary flex items-center gap-1" onClick={handlePrint}>
             <Printer size={15} /> Print
           </button>
         </div>
       </div>
-      {pdfError && (
-        <div className="no-print flex items-center gap-2 px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-sm">
-          <AlertCircle size={14} />
-          {pdfError}
-        </div>
-      )}
 
       {/* Print area */}
       <div ref={printRef} style={{ backgroundColor: "#fff" }}>
