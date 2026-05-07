@@ -175,6 +175,9 @@ function M125Print({ d, rows, onActualChange }) {
     return ((a - s) / s * 100).toFixed(2);
   };
 
+  // Aggregate column keys — row 3 shows 0.00, row 4 shows 0.00 only for these
+  const AGG_KEYS = new Set(["sand1","agg_20mm","sand2","agg_12mm","agg_6mm","agg6"]);
+
   // ── Design tokens ─────────────────────────────────────────────────────────
   const F     = FONT;
   const fs    = "9pt";
@@ -343,23 +346,30 @@ function M125Print({ d, rows, onActualChange }) {
               })}
             </tr>,
 
-            /* Row 3 of 5 — Correction — compact */
+            /* Row 3 of 5 — Correction % (from PDF):
+               Aggregate cols → "0.00"  |  Admix cols → "0.00"
+               Cement/Water/Silica cols → "0"                    */
             <tr key={`c${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => {
-                const diff = parseFloat(row[c.key + "_actual"] || 0) - batchTgt[i];
+                const diff  = parseFloat(row[c.key + "_actual"] || 0) - batchTgt[i];
+                const isAgg = AGG_KEYS.has(c.key);
+                const show  = diff === 0
+                  ? (isAgg || c.dec ? "0.00" : "0")
+                  : (isAgg || c.dec ? diff.toFixed(2) : fv(diff));
                 return (
                   <td key={c.key} style={{ ...tc, width: c.w, color: "#555", fontSize: "8pt" }}>
-                    {diff === 0 ? "0" : c.dec ? diff.toFixed(c.dec) : fv(diff)}
+                    {show}
                   </td>
                 );
               })}
             </tr>,
 
-            /* Row 4 of 5 — Blank zeros — compact */
+            /* Row 4 of 5 — Second correction row (from PDF):
+               Only first 6 aggregate cols show "0.00" — rest are EMPTY  */
             <tr key={`z${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w, color: "#aaa", fontSize: "8pt" }}>
-                  0
+                  {AGG_KEYS.has(c.key) ? "0.00" : ""}
                 </td>
               ))}
             </tr>,
@@ -722,21 +732,33 @@ export default function BatchReport() {
         </div>
       </div>
 
-      {/* Print area */}
-      <div ref={printRef} style={{ backgroundColor: "#fff" }}>
+      {/* Print area — A4 size on screen, exact A4 on print */}
+      <div style={{ backgroundColor: "#e5e5e5", padding: "16px 0", minHeight: "100vh" }}
+        className="no-print-bg">
         <style>{`
           @media print {
             @page { size: A4 portrait; margin: 4mm; }
-            body { margin: 0; }
-            .no-print  { display: none !important; }
-            .print-only { display: inline !important; }
+            body { margin: 0; background: white; }
+            .no-print      { display: none !important; }
+            .no-print-bg   { background: white !important; padding: 0 !important; }
+            .print-only    { display: inline !important; }
           }
           @media screen { .print-only { display: none !important; } }
         `}</style>
-        {data.plant_type === "M1.25"
-          ? <M125Print d={data} rows={rows} onActualChange={handleActualChange} />
-          : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange} />
-        }
+        {/* A4 page shadow on screen */}
+        <div ref={printRef}
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            margin: "0 auto",
+            backgroundColor: "#fff",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.25)",
+          }}>
+          {data.plant_type === "M1.25"
+            ? <M125Print d={data} rows={rows} onActualChange={handleActualChange} />
+            : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange} />
+          }
+        </div>
       </div>
     </div>
   );
