@@ -6,67 +6,83 @@ import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 const DENSITY_MIN = 2410;
-const PLANT_TYPES = ["M1.25", "CP30"];
 
-const INGREDIENTS = [
-  { key: "sand1",    label: "Sand 1" },
-  { key: "agg_20mm", label: "20 MM" },
-  { key: "sand2",    label: "Sand 2" },
-  { key: "agg_12mm", label: "12 MM" },
-  { key: "agg_6mm",  label: "6 MM" },
-  { key: "agg6",     label: "Agg 6" },
-  { key: "cem1",     label: "Cem 1" },
-  { key: "cem2",     label: "Cem 2" },
-  { key: "cem3",     label: "Cem 3" },
-  { key: "cem4",     label: "Cem 4" },
-  { key: "fly",      label: "Fly Ash" },
-  { key: "wtr1",     label: "Water 1" },
-  { key: "wtr2",     label: "Water 2" },
-  { key: "wtr3",     label: "Water 3" },
-  { key: "adx1",     label: "ADX 1" },
-  { key: "adx2",     label: "ADX 2" },
-  { key: "adx3",     label: "ADX 3" },
-  { key: "adx4",     label: "ADX 4" },
-  { key: "silica",   label: "Silica" },
-  { key: "moisture", label: "Moisture" },
-  { key: "filler",   label: "Filler" },
-  { key: "col1",     label: "Col 1" },
-  { key: "col2",     label: "Col 2" },
-  { key: "col3",     label: "Col 3" },
+const GROUPS = [
+  {
+    label: "Common Ingredients",
+    subtitle: "Used in both M1.25 and CP30",
+    color: "bg-blue-50 border-blue-200",
+    headerColor: "text-blue-700",
+    ingredients: [
+      { key: "sand1",    label: "Sand 1" },
+      { key: "sand2",    label: "Sand 2" },
+      { key: "agg_20mm", label: "20 MM" },
+      { key: "agg_12mm", label: "12 MM" },
+      { key: "cem1",     label: "Cement 1" },
+      { key: "cem2",     label: "Cement 2" },
+      { key: "fly",      label: "Fly Ash" },
+      { key: "wtr1",     label: "Water 1" },
+      { key: "adx1",     label: "Admix 1" },
+      { key: "adx2",     label: "Admix 2" },
+    ],
+  },
+  {
+    label: "M1.25 Extra Ingredients",
+    subtitle: "Only for M1.25 plant batches",
+    color: "bg-green-50 border-green-200",
+    headerColor: "text-green-700",
+    ingredients: [
+      { key: "agg_6mm",  label: "6 MM" },
+      { key: "agg6",     label: "Agg" },
+      { key: "cem3",     label: "Cement 3" },
+      { key: "cem4",     label: "Cement 4" },
+      { key: "wtr2",     label: "Water 2" },
+      { key: "wtr3",     label: "Water 3" },
+      { key: "adx3",     label: "Admix 3" },
+      { key: "adx4",     label: "Admix 4" },
+      { key: "silica",   label: "Silica" },
+    ],
+  },
+  {
+    label: "CP30 Extra Ingredients",
+    subtitle: "Only for CP30 plant batches",
+    color: "bg-orange-50 border-orange-200",
+    headerColor: "text-orange-700",
+    ingredients: [
+      { key: "moisture", label: "Moisture" },
+      { key: "filler",   label: "Filler" },
+      { key: "col1",     label: "1" },
+      { key: "col2",     label: "2" },
+      { key: "col3",     label: "3" },
+    ],
+  },
 ];
 
-function emptyForm(plantType = "M1.25", gradeId = "") {
-  const base = { plant_type: plantType, grade_id: gradeId };
-  INGREDIENTS.forEach(i => { base[i.key] = "0"; });
+const ALL_KEYS = GROUPS.flatMap(g => g.ingredients.map(i => i.key));
+
+function emptyForm(customerId = "", gradeId = "") {
+  const base = { customer_id: customerId, grade_id: gradeId };
+  ALL_KEYS.forEach(k => { base[k] = "0"; });
   return base;
 }
 
 function computeDensity(values) {
-  return INGREDIENTS.reduce((sum, i) => sum + (parseFloat(values[i.key]) || 0), 0);
-}
-
-function IngredientInput({ ing, value, onChange }) {
-  return (
-    <div className="flex flex-col">
-      <label className="text-xs text-gray-500 mb-0.5">{ing.label}</label>
-      <input
-        type="number" step="0.001" min="0"
-        className="border rounded px-2 py-1 text-sm w-full focus:outline-none focus:ring-1 focus:ring-primary"
-        value={value}
-        onChange={e => onChange(ing.key, e.target.value)}
-      />
-    </div>
-  );
+  return ALL_KEYS.reduce((s, k) => s + (parseFloat(values[k]) || 0), 0);
 }
 
 export default function DesignMix() {
   const qc = useQueryClient();
-  const [plantFilter, setPlantFilter] = useState("M1.25");
+  const [filterCustomerId, setFilterCustomerId] = useState("");
   const [modal, setModal] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [density, setDensity] = useState(0);
   const [apiError, setApiError] = useState("");
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
+    queryFn: () => api.get("/customers").then(r => r.data),
+  });
 
   const { data: materialTypes = [] } = useQuery({
     queryKey: ["material-types"],
@@ -77,8 +93,11 @@ export default function DesignMix() {
   const grades = concreteType?.grades?.filter(g => g.is_active) ?? [];
 
   const { data: mixes = [], isLoading } = useQuery({
-    queryKey: ["design-mixes", plantFilter],
-    queryFn: () => api.get(`/design-mixes?plant_type=${plantFilter}`).then(r => r.data),
+    queryKey: ["design-mixes", filterCustomerId],
+    queryFn: () => {
+      const params = filterCustomerId ? `?customer_id=${filterCustomerId}` : "";
+      return api.get(`/design-mixes${params}`).then(r => r.data);
+    },
   });
 
   const saveMix = useMutation({
@@ -86,6 +105,7 @@ export default function DesignMix() {
     onSuccess: () => { qc.invalidateQueries(["design-mixes"]); setModal(null); setApiError(""); },
     onError: e => setApiError(e.response?.data?.detail || "Error saving design mix."),
   });
+
   const delMix = useMutation({
     mutationFn: id => api.delete(`/design-mixes/${id}`),
     onSuccess: () => { qc.invalidateQueries(["design-mixes"]); setConfirm(null); },
@@ -97,22 +117,19 @@ export default function DesignMix() {
 
   function openModal(mix = null) {
     const initial = mix
-      ? { ...mix, grade_id: mix.grade_id }
-      : emptyForm(plantFilter, grades[0]?.id ?? "");
+      ? { ...mix, customer_id: mix.customer_id, grade_id: mix.grade_id }
+      : emptyForm(filterCustomerId, grades[0]?.id ?? "");
     setFormValues(initial);
     setDensity(computeDensity(initial));
     setApiError("");
     setModal({ data: mix });
   }
 
-  function handleIngChange(key, val) {
-    setFormValues(prev => ({ ...prev, [key]: val }));
-  }
-
   function handleSubmit(e) {
     e.preventDefault();
     const payload = { ...formValues };
-    INGREDIENTS.forEach(i => { payload[i.key] = parseFloat(payload[i.key]) || 0; });
+    ALL_KEYS.forEach(k => { payload[k] = parseFloat(payload[k]) || 0; });
+    payload.customer_id = parseInt(payload.customer_id);
     payload.grade_id = parseInt(payload.grade_id);
     if (modal.data?.id) payload.id = modal.data.id;
     saveMix.mutate(payload);
@@ -129,14 +146,14 @@ export default function DesignMix() {
         </button>
       </div>
 
-      {/* Plant filter tabs */}
-      <div className="flex gap-1 border-b">
-        {PLANT_TYPES.map(p => (
-          <button key={p} onClick={() => setPlantFilter(p)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${plantFilter === p ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            {p} Plant
-          </button>
-        ))}
+      {/* Filter by customer */}
+      <div className="flex items-center gap-3">
+        <label className="label mb-0 whitespace-nowrap">Filter by Customer:</label>
+        <select className="input max-w-xs" value={filterCustomerId}
+          onChange={e => setFilterCustomerId(e.target.value)}>
+          <option value="">All Customers</option>
+          {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
       </div>
 
       {isLoading ? <p className="text-gray-400">Loading…</p> : (
@@ -144,8 +161,8 @@ export default function DesignMix() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="text-left px-4 py-3 text-gray-600">Customer</th>
                 <th className="text-left px-4 py-3 text-gray-600">Grade</th>
-                <th className="text-left px-4 py-3 text-gray-600">Plant</th>
                 <th className="text-left px-4 py-3 text-gray-600">Version</th>
                 <th className="text-left px-4 py-3 text-gray-600">Total Density</th>
                 <th className="px-4 py-3"></th>
@@ -154,8 +171,8 @@ export default function DesignMix() {
             <tbody>
               {mixes.map(m => (
                 <tr key={m.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{m.grade_name}</td>
-                  <td className="px-4 py-3 text-gray-500">{m.plant_type}</td>
+                  <td className="px-4 py-3 font-medium">{m.customer_name}</td>
+                  <td className="px-4 py-3">{m.grade_name}</td>
                   <td className="px-4 py-3 text-gray-500">v{m.version}</td>
                   <td className="px-4 py-3">
                     <span className={`flex items-center gap-1 font-mono text-sm ${parseFloat(m.total_density) >= DENSITY_MIN ? "text-green-700" : "text-red-600"}`}>
@@ -167,30 +184,44 @@ export default function DesignMix() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
-                      <button className="text-gray-400 hover:text-primary" onClick={() => openModal(m)}><Pencil size={15} /></button>
-                      <button className="text-gray-400 hover:text-red-500" onClick={() => setConfirm({ id: m.id, name: `${m.grade_name} / ${m.plant_type}` })}><Trash2 size={15} /></button>
+                      <button className="text-gray-400 hover:text-primary" onClick={() => openModal(m)}>
+                        <Pencil size={15} />
+                      </button>
+                      <button className="text-gray-400 hover:text-red-500"
+                        onClick={() => setConfirm({ id: m.id, name: `${m.customer_name} / ${m.grade_name}` })}>
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
               {!mixes.length && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No design mixes for {plantFilter}. Add one.</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No design mixes found. Add one.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* Design Mix Modal */}
+      {/* ── Design Mix Modal ──────────────────────────────────────────────── */}
       {modal && (
-        <Modal title={modal.data?.id ? "Edit Design Mix" : "Add Design Mix"} onClose={() => setModal(null)}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <Modal
+          title={modal.data?.id ? "Edit Design Mix" : "Add Design Mix"}
+          onClose={() => setModal(null)}>
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* Customer + Grade */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Plant Type *</label>
-                <select className="input" value={formValues.plant_type || "M1.25"}
-                  onChange={e => setFormValues(v => ({ ...v, plant_type: e.target.value }))}>
-                  {PLANT_TYPES.map(p => <option key={p}>{p}</option>)}
+                <label className="label">Customer *</label>
+                <select className="input" value={formValues.customer_id || ""}
+                  onChange={e => setFormValues(v => ({ ...v, customer_id: e.target.value }))} required>
+                  <option value="">Select customer…</option>
+                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
@@ -203,19 +234,39 @@ export default function DesignMix() {
               </div>
             </div>
 
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ingredients (kg/m³)</p>
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-              {INGREDIENTS.map(ing => (
-                <IngredientInput key={ing.key} ing={ing} value={formValues[ing.key] ?? "0"} onChange={handleIngChange} />
-              ))}
-            </div>
+            <p className="text-xs text-gray-400 -mt-2">
+              This design mix applies to <strong>both M1.25 and CP30</strong> plants for the selected customer + grade.
+            </p>
+
+            {/* Ingredient groups */}
+            {GROUPS.map(group => (
+              <div key={group.label} className={`border rounded-lg p-4 space-y-3 ${group.color}`}>
+                <div>
+                  <p className={`text-sm font-semibold ${group.headerColor}`}>{group.label}</p>
+                  <p className="text-xs text-gray-400">{group.subtitle}</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {group.ingredients.map(ing => (
+                    <div key={ing.key}>
+                      <label className="text-xs text-gray-500 mb-0.5 block">{ing.label}</label>
+                      <input
+                        type="number" step="0.001" min="0"
+                        className="border rounded px-2 py-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+                        value={formValues[ing.key] ?? "0"}
+                        onChange={e => setFormValues(v => ({ ...v, [ing.key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
 
             {/* Live density indicator */}
-            <div className={`flex items-center gap-2 px-3 py-2 rounded ${densityOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {densityOk ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${densityOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+              {densityOk ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
               <span className="text-sm font-medium">
                 Total Density: <strong>{density.toFixed(1)} kg/m³</strong>
-                {!densityOk && ` — minimum ${DENSITY_MIN} kg/m³ required`}
+                {!densityOk && <span className="text-xs ml-2">(minimum {DENSITY_MIN} kg/m³ required)</span>}
               </span>
             </div>
 
@@ -223,7 +274,9 @@ export default function DesignMix() {
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" className="btn-primary" disabled={saveMix.isPending || !densityOk}>Save</button>
+              <button type="submit" className="btn-primary" disabled={saveMix.isPending || !densityOk}>
+                {saveMix.isPending ? "Saving…" : "Save Design Mix"}
+              </button>
             </div>
           </form>
         </Modal>
@@ -231,7 +284,7 @@ export default function DesignMix() {
 
       {confirm && (
         <ConfirmDialog
-          message={`Delete design mix "${confirm.name}"?`}
+          message={`Delete design mix for "${confirm.name}"?`}
           onCancel={() => setConfirm(null)}
           onConfirm={() => delMix.mutate(confirm.id)}
         />

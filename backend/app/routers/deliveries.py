@@ -72,12 +72,12 @@ def create_delivery(body: DeliveryCreate, db: Session = Depends(get_db), current
     if not site:
         raise HTTPException(404, "Site not found")
 
-    # Look up design mix for batch report
+    # Look up design mix for batch report (per customer + grade, same mix for both plants)
     design_mix_id = None
     if body.plant_type in ("M1.25", "CP30"):
         dm = (
             db.query(DesignMix)
-            .filter_by(plant_type=body.plant_type, grade_id=body.grade_id)
+            .filter_by(customer_id=body.customer_id, grade_id=body.grade_id)
             .filter(DesignMix.valid_to == None)  # noqa: E711
             .order_by(DesignMix.version.desc())
             .first()

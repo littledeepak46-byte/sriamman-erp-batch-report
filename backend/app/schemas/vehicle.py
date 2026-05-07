@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class VehicleBase(BaseModel):
     vehicle_number: str
     empty_weight_kg: Decimal
+    default_driver_id: int | None = None
 
 
 class VehicleCreate(VehicleBase):
@@ -18,6 +19,7 @@ class VehicleUpdate(VehicleBase):
 class VehicleOut(VehicleBase):
     id: int
     is_active: bool
+    default_driver_name: str | None = None
 
     class Config:
         from_attributes = True

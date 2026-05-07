@@ -69,6 +69,13 @@ export default function NewDelivery() {
   });
   const selectedSite = sites.find(s => s.id === parseInt(siteId));
   const selectedVehicle = vehicles.find(v => v.id === parseInt(vehicleId));
+
+  // Auto-fill default driver when vehicle changes
+  useEffect(() => {
+    if (selectedVehicle?.default_driver_id) {
+      setDriverId(String(selectedVehicle.default_driver_id));
+    }
+  }, [vehicleId]);
   const selectedMaterial = materialTypes.find(m => m.id === parseInt(materialTypeId));
   const grades = selectedMaterial?.grades?.filter(g => g.is_active) ?? [];
   const isConcreteSelected = selectedMaterial?.name === CONCRETE_NAME;

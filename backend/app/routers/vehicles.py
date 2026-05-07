@@ -13,6 +13,14 @@ from app.schemas.vehicle import (
 router = APIRouter(tags=["vehicles-drivers"])
 
 
+def _enrich_vehicle(v: Vehicle, db: Session) -> VehicleOut:
+    out = VehicleOut.model_validate(v)
+    if v.default_driver_id:
+        driver = db.get(Driver, v.default_driver_id)
+        out.default_driver_name = driver.name if driver else None
+    return out
+
+
 # ── Vehicles ───────────────────────────────────────────────────────────────────
 
 @router.get("/vehicles", response_model=list[VehicleOut])
@@ -20,7 +28,7 @@ def list_vehicles(active_only: bool = True, db: Session = Depends(get_db), _: Us
     q = db.query(Vehicle)
     if active_only:
         q = q.filter(Vehicle.is_active == True)
-    return q.order_by(Vehicle.vehicle_number).all()
+    return [_enrich_vehicle(v, db) for v in q.order_by(Vehicle.vehicle_number).all()]
 
 
 @router.post("/vehicles", response_model=VehicleOut, status_code=201)
@@ -31,7 +39,7 @@ def create_vehicle(body: VehicleCreate, db: Session = Depends(get_db), _: User =
     db.add(v)
     db.commit()
     db.refresh(v)
-    return v
+    return _enrich_vehicle(v, db)
 
 
 @router.put("/vehicles/{vid}", response_model=VehicleOut)
@@ -43,7 +51,7 @@ def update_vehicle(vid: int, body: VehicleUpdate, db: Session = Depends(get_db),
         setattr(v, k, val)
     db.commit()
     db.refresh(v)
-    return v
+    return _enrich_vehicle(v, db)
 
 
 @router.delete("/vehicles/{vid}", status_code=204)

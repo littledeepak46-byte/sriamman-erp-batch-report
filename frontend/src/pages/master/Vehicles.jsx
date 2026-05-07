@@ -71,6 +71,7 @@ export default function Vehicles() {
               <tr>
                 <th className="text-left px-4 py-3 text-gray-600">Vehicle Number</th>
                 <th className="text-left px-4 py-3 text-gray-600">Empty Weight (kg)</th>
+                <th className="text-left px-4 py-3 text-gray-600">Default Driver</th>
                 <th className="text-left px-4 py-3 text-gray-600">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -80,6 +81,7 @@ export default function Vehicles() {
                 <tr key={v.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono font-medium">{v.vehicle_number}</td>
                   <td className="px-4 py-3">{Number(v.empty_weight_kg).toLocaleString()} kg</td>
+                  <td className="px-4 py-3 text-gray-500">{v.default_driver_name || <span className="text-gray-300">—</span>}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${v.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                       {v.is_active ? "Active" : "Inactive"}
@@ -137,8 +139,17 @@ export default function Vehicles() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isVehicle ? (
               <>
-                <div><label className="label">Vehicle Number *</label><input className="input font-mono uppercase" name="vehicle_number" defaultValue={modal.data?.vehicle_number} required /></div>
-                <div><label className="label">Empty Weight (kg) *</label><input className="input" type="number" step="0.01" name="empty_weight_kg" defaultValue={modal.data?.empty_weight_kg} required /></div>
+                <div><label className="label">Vehicle Number *</label>
+                  <input className="input font-mono uppercase" name="vehicle_number" defaultValue={modal.data?.vehicle_number} required /></div>
+                <div><label className="label">Empty Weight (kg) *</label>
+                  <input className="input" type="number" step="0.01" name="empty_weight_kg" defaultValue={modal.data?.empty_weight_kg} required /></div>
+                <div><label className="label">Default Driver</label>
+                  <select className="input" name="default_driver_id" defaultValue={modal.data?.default_driver_id || ""}>
+                    <option value="">None</option>
+                    {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">Auto-fills in the delivery form when this vehicle is selected.</p>
+                </div>
               </>
             ) : (
               <>

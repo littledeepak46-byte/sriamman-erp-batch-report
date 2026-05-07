@@ -8,44 +8,42 @@ import { useParams } from "react-router-dom";
 
 const MAX_BATCH = { "M1.25": 1.25, "CP30": 0.50 };
 
-// Ingredients per plant type (key → label)
+// Ingredients shown per plant type
+// Common ingredients used in both plants
+const COMMON = [
+  { key: "sand1",    label: "Sand 1" },
+  { key: "sand2",    label: "Sand 2" },
+  { key: "agg_20mm", label: "20 MM" },
+  { key: "agg_12mm", label: "12 MM" },
+  { key: "cem1",     label: "Cement 1" },
+  { key: "cem2",     label: "Cement 2" },
+  { key: "fly",      label: "Fly Ash" },
+  { key: "wtr1",     label: "Water 1" },
+  { key: "adx1",     label: "Admix 1" },
+  { key: "adx2",     label: "Admix 2" },
+];
+const M125_EXTRA = [
+  { key: "agg_6mm", label: "6 MM" },
+  { key: "agg6",    label: "Agg" },
+  { key: "cem3",    label: "Cement 3" },
+  { key: "cem4",    label: "Cement 4" },
+  { key: "wtr2",    label: "Water 2" },
+  { key: "wtr3",    label: "Water 3" },
+  { key: "adx3",    label: "Admix 3" },
+  { key: "adx4",    label: "Admix 4" },
+  { key: "silica",  label: "Silica" },
+];
+const CP30_EXTRA = [
+  { key: "moisture", label: "Moisture" },
+  { key: "filler",   label: "Filler" },
+  { key: "col1",     label: "1" },
+  { key: "col2",     label: "2" },
+  { key: "col3",     label: "3" },
+];
+
 const INGREDIENTS = {
-  "M1.25": [
-    { key: "sand1",    label: "Sand 1" },
-    { key: "agg_20mm", label: "20 MM" },
-    { key: "sand2",    label: "Sand 2" },
-    { key: "agg_12mm", label: "12 MM" },
-    { key: "agg_6mm",  label: "6 MM" },
-    { key: "agg6",     label: "Agg 6" },
-    { key: "cem1",     label: "Cem 1" },
-    { key: "cem2",     label: "Cem 2" },
-    { key: "cem3",     label: "Cem 3" },
-    { key: "cem4",     label: "Cem 4" },
-    { key: "fly",      label: "Fly Ash" },
-    { key: "wtr1",     label: "Water 1" },
-    { key: "wtr2",     label: "Water 2" },
-    { key: "wtr3",     label: "Water 3" },
-    { key: "adx1",     label: "ADX 1" },
-    { key: "adx2",     label: "ADX 2" },
-    { key: "adx3",     label: "ADX 3" },
-    { key: "adx4",     label: "ADX 4" },
-    { key: "silica",   label: "Silica" },
-    { key: "moisture", label: "Moisture" },
-    { key: "filler",   label: "Filler" },
-  ],
-  "CP30": [
-    { key: "agg_20mm", label: "20 MM" },
-    { key: "sand1",    label: "Sand 1" },
-    { key: "moisture", label: "Moisture" },
-    { key: "agg_12mm", label: "12 MM" },
-    { key: "cem1",     label: "Cem 1" },
-    { key: "cem2",     label: "Cem 2" },
-    { key: "fly",      label: "Fly Ash" },
-    { key: "filler",   label: "Filler" },
-    { key: "wtr1",     label: "Water 1" },
-    { key: "adx1",     label: "ADX 1" },
-    { key: "adx2",     label: "ADX 2" },
-  ],
+  "M1.25": [...COMMON, ...M125_EXTRA],
+  "CP30":  [...COMMON, ...CP30_EXTRA],
 };
 
 function calcBatches(qty, plantType) {
