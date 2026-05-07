@@ -84,12 +84,6 @@ function WeighSlipTemplate({ data, type = "OUTWARD" }) {
       {/* ── BODY ────────────────────────────────────────────────────── */}
       <div style={{ padding: "3mm 6mm 4mm" }}>
 
-        {/* INWARD/OUTWARD badge */}
-        <div style={{ ...f(9, "bold"), color: type === "INWARD" ? "#b45309" : "#1a6e1a",
-          border: `1px solid ${type === "INWARD" ? "#b45309" : "#1a6e1a"}`,
-          display: "inline-block", padding: "1px 8px", marginBottom: "4px", letterSpacing: "1px" }}>
-          {type}
-        </div>
 
         {/* Fields grid */}
         <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "2px" }}>
