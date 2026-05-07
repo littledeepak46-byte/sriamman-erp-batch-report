@@ -75,5 +75,6 @@ class PrintDataOut(BaseModel):
     delivery_time: time
     gross_weight_kg: Decimal | None
     net_weight_kg: Decimal | None
+    operator_name: str | None = None
     design_mix: DesignMixPrint | None = None
     batch_actuals: list[BatchActualRow] = []

@@ -256,6 +256,7 @@ def get_print_data(delivery_id: int, db: Session = Depends(get_db), _: User = De
         delivery_time=d.delivery_time,
         gross_weight_kg=d.gross_weight_kg,
         net_weight_kg=d.net_weight_kg,
+        operator_name=db.get(User, d.created_by).username if d.created_by else None,
         design_mix=dm_out,
         batch_actuals=actuals_out,
     )

@@ -1,66 +1,339 @@
 import { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Printer, ArrowLeft, Save } from "lucide-react";
 import api from "../../api/axios";
 import { usePrintData } from "../../hooks/usePrintData";
-import { useParams } from "react-router-dom";
 
+// ── Constants ─────────────────────────────────────────────────────────────────
 const MAX_BATCH = { "M1.25": 1.25, "CP30": 0.50 };
-
-// Ingredients shown per plant type
-// Common ingredients used in both plants
-const COMMON = [
-  { key: "sand1",    label: "Sand 1" },
-  { key: "sand2",    label: "Sand 2" },
-  { key: "agg_20mm", label: "20 MM" },
-  { key: "agg_12mm", label: "12 MM" },
-  { key: "cem1",     label: "Cement 1" },
-  { key: "cem2",     label: "Cement 2" },
-  { key: "fly",      label: "Fly Ash" },
-  { key: "wtr1",     label: "Water 1" },
-  { key: "adx1",     label: "Admix 1" },
-  { key: "adx2",     label: "Admix 2" },
-];
-const M125_EXTRA = [
-  { key: "agg_6mm", label: "6 MM" },
-  { key: "agg6",    label: "Agg" },
-  { key: "cem3",    label: "Cement 3" },
-  { key: "cem4",    label: "Cement 4" },
-  { key: "wtr2",    label: "Water 2" },
-  { key: "wtr3",    label: "Water 3" },
-  { key: "adx3",    label: "Admix 3" },
-  { key: "adx4",    label: "Admix 4" },
-  { key: "silica",  label: "Silica" },
-];
-const CP30_EXTRA = [
-  { key: "moisture", label: "Moisture" },
-  { key: "filler",   label: "Filler" },
-  { key: "col1",     label: "1" },
-  { key: "col2",     label: "2" },
-  { key: "col3",     label: "3" },
-];
-
-const INGREDIENTS = {
-  "M1.25": [...COMMON, ...M125_EXTRA],
-  "CP30":  [...COMMON, ...CP30_EXTRA],
-};
 
 function calcBatches(qty, plantType) {
   const max = MAX_BATCH[plantType] || 1.25;
-  const numBatches = Math.ceil(qty / max);
-  const batchSize = qty / numBatches;
-  return { numBatches, batchSize: Math.round(batchSize * 1000) / 1000 };
+  const n = Math.ceil(qty / max);
+  const size = Math.round((qty / n) * 1000) / 1000;
+  return { numBatches: n, batchSize: size };
 }
 
-function targetForIngredient(dm, key, batchSize) {
-  if (!dm) return 0;
-  const perM3 = parseFloat(dm[key] || 0);
-  return Math.round(perM3 * batchSize * 1000) / 1000;
+// ── Ingredient column definitions per plant ───────────────────────────────────
+// Each entry: { key, label, category }
+const M125_COLS = [
+  { key: "sand1",    label: "M.SAND",    cat: "Aggregate" },
+  { key: "agg_20mm", label: "20MM",      cat: "Aggregate" },
+  { key: "sand2",    label: "M.SAND 2",  cat: "Aggregate" },
+  { key: "agg_12mm", label: "12MM",      cat: "Aggregate" },
+  { key: "agg_6mm",  label: "6MM",       cat: "Aggregate" },
+  { key: "agg6",     label: "Agg6",      cat: "Aggregate" },
+  { key: "cem1",     label: "Cem1",      cat: "Cement" },
+  { key: "cem2",     label: "Cem2",      cat: "Cement" },
+  { key: "cem3",     label: "Cem3",      cat: "Cement" },
+  { key: "cem4",     label: "Cem4",      cat: "Cement" },
+  { key: "fly",      label: "Fly Ash",   cat: "Cement" },
+  { key: "wtr1",     label: "Wtr1",      cat: "Water/Ice" },
+  { key: "wtr2",     label: "Wtr2",      cat: "Water/Ice" },
+  { key: "wtr3",     label: "Wtr3",      cat: "Water/Ice" },
+  { key: "adx1",     label: "Admix1",    cat: "Admixture" },
+  { key: "adx2",     label: "Admix2",    cat: "Admixture" },
+  { key: "adx3",     label: "Admix3",    cat: "Admixture" },
+  { key: "adx4",     label: "Admix4",    cat: "Admixture" },
+  { key: "silica",   label: "Silica",    cat: "Silica" },
+];
+
+const CP30_COLS = [
+  { key: "agg_20mm", label: "20MM",      cat: "Aggregate" },
+  { key: "sand1",    label: "SAND",      cat: "Aggregate" },
+  { key: "moisture", label: "Moi",       cat: "Aggregate" },
+  { key: "agg_12mm", label: "10MM",      cat: "Aggregate" },
+  { key: "cem1",     label: "CEM 1",     cat: "Cement" },
+  { key: "cem2",     label: "CEM 2",     cat: "Cement" },
+  { key: "filler",   label: "FILLER",    cat: "Cement" },
+  { key: "wtr1",     label: "WATER",     cat: "Water" },
+  { key: "adx1",     label: "ADMIX1",    cat: "Admixture" },
+  { key: "adx2",     label: "ADMIX2",    cat: "Admixture" },
+];
+
+const COLS = { "M1.25": M125_COLS, "CP30": CP30_COLS };
+
+// ── Cell styles ───────────────────────────────────────────────────────────────
+const S = {
+  base:    { border: "1px solid #ccc", padding: "2px 3px", fontSize: "8px", textAlign: "right", whiteSpace: "nowrap" },
+  header:  { border: "1px solid #999", padding: "3px 3px", fontSize: "7.5px", textAlign: "center", fontWeight: "bold", backgroundColor: "#1e3a5f", color: "#fff" },
+  catHead: { border: "1px solid #999", padding: "3px 3px", fontSize: "8px", textAlign: "center", fontWeight: "bold", backgroundColor: "#2d5f8a", color: "#fff" },
+  label:   { border: "1px solid #ccc", padding: "2px 5px", fontSize: "8px", textAlign: "left", fontWeight: "bold", backgroundColor: "#f8fafc", whiteSpace: "nowrap" },
+  target:  { border: "1px solid #ccc", padding: "2px 3px", fontSize: "8px", textAlign: "right", backgroundColor: "#eff6ff", color: "#1e3a5f" },
+  actual:  { border: "1px solid #ccc", padding: "2px 3px", fontSize: "8px", textAlign: "right", backgroundColor: "#fff" },
+  total:   { border: "1px solid #999", padding: "3px 3px", fontSize: "8px", textAlign: "right", fontWeight: "bold", backgroundColor: "#e8f0fe", color: "#1e3a5f" },
+  diff:    { border: "1px solid #999", padding: "3px 3px", fontSize: "8px", textAlign: "right", fontWeight: "bold" },
+};
+
+function n(v, dec = 2) {
+  const num = parseFloat(v || 0);
+  return num === 0 ? "0" : num.toFixed(dec);
+}
+function nActual(v, dec = 2) {
+  return parseFloat(v || 0).toFixed(dec);
 }
 
-function n(val) { return val != null ? Number(val).toFixed(3) : "0.000"; }
+// Group category headers
+function buildCategorySpans(cols) {
+  const groups = [];
+  let cur = null;
+  cols.forEach(c => {
+    if (!cur || cur.cat !== c.cat) { cur = { cat: c.cat, span: 1 }; groups.push(cur); }
+    else cur.span++;
+  });
+  return groups;
+}
 
+// ── Print Template ────────────────────────────────────────────────────────────
+function BatchReportPrint({ d, cols, rows, onActualChange }) {
+  if (!d) return null;
+
+  const dm = d.design_mix;
+  const { numBatches, batchSize } = calcBatches(parseFloat(d.quantity_m3), d.plant_type);
+  const catSpans = buildCategorySpans(cols);
+
+  const dateStr = d.delivery_date
+    ? new Date(d.delivery_date + "T00:00:00").toLocaleDateString("en-IN",
+        { day: "2-digit", month: "short", year: "numeric" })
+    : "";
+  const timeStr = d.delivery_time?.slice(0, 8) || "";
+
+  // Totals
+  const setTotals = cols.map(c => {
+    const perM3 = parseFloat(dm?.[c.key] || 0);
+    return Math.round(perM3 * batchSize * numBatches * 1000) / 1000;
+  });
+  const actualTotals = cols.map(c =>
+    rows.reduce((s, r) => s + (parseFloat(r[c.key + "_actual"]) || 0), 0)
+  );
+  const massSetTotal = setTotals.reduce((a, b) => a + b, 0);
+  const massActualTotal = actualTotals.reduce((a, b) => a + b, 0);
+
+  function diffPct(set, actual) {
+    if (set === 0) return "0";
+    const p = ((actual - set) / set * 100);
+    return (p === 0 ? "0.00" : p.toFixed(2));
+  }
+
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif", padding: "5mm", backgroundColor: "#fff" }}>
+
+      {/* ── Company Header ───────────────────────────────────────────────── */}
+      <div style={{ textAlign: "center", marginBottom: "6px" }}>
+        <div style={{ fontSize: "14px", fontWeight: "bold", color: "#1e3a5f", letterSpacing: "0.5px" }}>
+          SRI AMMAN READY MIX CONCRETE
+        </div>
+        <div style={{ fontSize: "9px", color: "#555" }}>
+          198/1, Chennapalli Post, Chinnar, Krishnagiri, Tamil Nadu – 635117
+        </div>
+        <div style={{ fontSize: "10px", fontWeight: "bold", marginTop: "3px", letterSpacing: "1px", textTransform: "uppercase" }}>
+          Docket / Batch Report / Autographic Record
+        </div>
+        <div style={{ borderBottom: "2px solid #1e3a5f", marginTop: "4px" }}></div>
+      </div>
+
+      {/* ── Batch Info Grid ──────────────────────────────────────────────── */}
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "6px", fontSize: "8.5px" }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "25%", verticalAlign: "top" }}>
+              <InfoRow label="Batch Date" value={dateStr} />
+              <InfoRow label="Batch Start Time" value={timeStr} />
+              <InfoRow label="Batch End Time" value="—" />
+            </td>
+            <td style={{ width: "25%", verticalAlign: "top" }}>
+              <InfoRow label="Batch Number / Docket No" value={`${d.batch_number || "—"}`} bold />
+              <InfoRow label="Customer" value={d.customer_name} />
+              <InfoRow label="Site" value={d.site_location || d.site_name} />
+            </td>
+            <td style={{ width: "25%", verticalAlign: "top" }}>
+              <InfoRow label="Recipe Code" value={d.grade_name} />
+              <InfoRow label="Recipe Name" value={d.grade_name} />
+              <InfoRow label="Truck Number" value={d.vehicle_number} />
+              <InfoRow label="Truck Driver" value={d.driver_name} />
+              <InfoRow label="Batcher Name" value="Stetter" />
+            </td>
+            <td style={{ width: "25%", verticalAlign: "top" }}>
+              <QtyRow label="Ordered Quantity" value={d.quantity_m3} />
+              <QtyRow label="Production Quantity" value={batchSize * numBatches} />
+              <QtyRow label="Adj/Manual Quantity" value="0.00" />
+              <QtyRow label="With This Load" value={d.cumulative_qty_m3 ?? "0.00"} />
+              <QtyRow label="Mixer Capacity" value={MAX_BATCH[d.plant_type]} />
+              <QtyRow label="Batch Size" value={batchSize} bold />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* ── Ingredient Table ─────────────────────────────────────────────── */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+
+          {/* Category row */}
+          <thead>
+            <tr>
+              <th style={{ ...S.catHead, width: "70px", textAlign: "left" }}></th>
+              {catSpans.map((g, i) => (
+                <th key={i} colSpan={g.span} style={S.catHead}>{g.cat}</th>
+              ))}
+              <th style={{ ...S.catHead, width: "60px" }}>Total Wt (kg)</th>
+            </tr>
+
+            {/* Ingredient name row */}
+            <tr>
+              <th style={{ ...S.header, textAlign: "left", fontSize: "7px" }}>Row</th>
+              {cols.map(c => (
+                <th key={c.key} style={{ ...S.header, minWidth: "38px" }}>{c.label}</th>
+              ))}
+              <th style={S.header}>Mass (kg)</th>
+            </tr>
+
+            {/* Targets row (per batch size) */}
+            <tr>
+              <td style={{ ...S.label, fontSize: "7px", color: "#1e3a5f" }}>Target / batch</td>
+              {cols.map(c => {
+                const v = parseFloat(dm?.[c.key] || 0) * batchSize;
+                return <td key={c.key} style={S.target}>{v === 0 ? "0" : v.toFixed(c.key.startsWith("adx") ? 3 : 0)}</td>;
+              })}
+              <td style={{ ...S.target, fontWeight: "bold" }}>
+                {cols.reduce((s, c) => s + parseFloat(dm?.[c.key] || 0) * batchSize, 0).toFixed(2)}
+              </td>
+            </tr>
+          </thead>
+
+          {/* Actual rows per batch */}
+          <tbody>
+            <tr>
+              <td colSpan={cols.length + 2}
+                style={{ fontSize: "7px", color: "#555", padding: "2px 4px", fontStyle: "italic", borderBottom: "1px solid #ddd" }}>
+                Actual in Kgs.
+              </td>
+            </tr>
+            {rows.map((row, bIdx) => {
+              const rowMass = cols.reduce((s, c) => s + (parseFloat(row[c.key + "_actual"]) || 0), 0);
+              return (
+                <tr key={bIdx} style={{ backgroundColor: bIdx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                  <td style={{ ...S.label, fontSize: "7px", color: "#555" }}>Batch {bIdx + 1}</td>
+                  {cols.map(c => {
+                    const tgt = parseFloat(dm?.[c.key] || 0) * batchSize;
+                    const act = parseFloat(row[c.key + "_actual"] || 0);
+                    const isAdx = c.key.startsWith("adx");
+                    return (
+                      <td key={c.key} style={{
+                        ...S.actual,
+                        color: tgt > 0 && Math.abs(act - tgt) / tgt > 0.05 ? "#c53030" : "#222",
+                      }}>
+                        <input
+                          className="no-print"
+                          type="number" step="0.001" min="0"
+                          value={row[c.key + "_actual"] ?? tgt}
+                          onChange={e => onActualChange(bIdx, c.key, e.target.value)}
+                          style={{ width: "100%", border: "none", textAlign: "right", fontSize: "7.5px",
+                            padding: "0 1px", background: "transparent", outline: "none" }}
+                        />
+                        <span className="print-only" style={{ display: "none", fontSize: "7.5px" }}>
+                          {isAdx ? parseFloat(row[c.key + "_actual"] || 0).toFixed(3)
+                                 : parseFloat(row[c.key + "_actual"] || 0).toFixed(0)}
+                        </span>
+                      </td>
+                    );
+                  })}
+                  <td style={S.actual}>{rowMass.toFixed(2)}</td>
+                </tr>
+              );
+            })}
+
+            {/* Total Set Weight */}
+            <tr>
+              <td style={{ ...S.label, color: "#1e3a5f" }}>Total Set Wt (kg)</td>
+              {cols.map((c, i) => (
+                <td key={c.key} style={S.total}>{setTotals[i].toFixed(c.key.startsWith("adx") ? 2 : 0)}</td>
+              ))}
+              <td style={{ ...S.total, fontSize: "9px" }}>{massSetTotal.toFixed(2)}</td>
+            </tr>
+
+            {/* Total Actual Weight */}
+            <tr>
+              <td style={{ ...S.label, color: "#c45c00" }}>Total Actual Wt (kg)</td>
+              {cols.map((c, i) => (
+                <td key={c.key} style={{ ...S.total, backgroundColor: "#fff7ed", color: "#c45c00" }}>
+                  {actualTotals[i].toFixed(c.key.startsWith("adx") ? 2 : 0)}
+                </td>
+              ))}
+              <td style={{ ...S.total, backgroundColor: "#fff7ed", color: "#c45c00", fontSize: "9px" }}>
+                {massActualTotal.toFixed(2)}
+              </td>
+            </tr>
+
+            {/* Difference % */}
+            <tr>
+              <td style={S.label}>Difference %</td>
+              {cols.map((c, i) => {
+                const p = parseFloat(diffPct(setTotals[i], actualTotals[i]));
+                return (
+                  <td key={c.key} style={{ ...S.diff,
+                    color: Math.abs(p) > 2 ? "#c53030" : "#276749",
+                    backgroundColor: Math.abs(p) > 2 ? "#fff5f5" : "#f0fff4"
+                  }}>
+                    {diffPct(setTotals[i], actualTotals[i])}
+                  </td>
+                );
+              })}
+              <td style={{ ...S.diff,
+                color: Math.abs((massActualTotal - massSetTotal) / (massSetTotal || 1) * 100) > 2 ? "#c53030" : "#276749",
+              }}>
+                {diffPct(massSetTotal, massActualTotal)}%
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <table style={{ width: "100%", marginTop: "8px", fontSize: "8px", borderCollapse: "collapse" }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "20%" }}><InfoRow label="Mixer Capacity" value={`${MAX_BATCH[d.plant_type]} m³`} /></td>
+            <td style={{ width: "20%" }}><InfoRow label="No. of Batches" value={numBatches} /></td>
+            <td style={{ width: "20%" }}><InfoRow label="Total Qty" value={`${d.quantity_m3} m³`} /></td>
+            <td style={{ width: "20%" }}><InfoRow label="DC Number" value={d.dc_number} /></td>
+            <td style={{ width: "20%", textAlign: "right" }}>
+              <div style={{ borderTop: "1px solid #000", paddingTop: "3px", marginTop: "18px", fontSize: "7.5px", color: "#555" }}>
+                Batch Controller Signature
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style={{ marginTop: "4px", fontSize: "7px", color: "#aaa", textAlign: "right" }}>
+        SRI AMMAN RMC — MCI Control System | Print Date: {new Date().toLocaleString("en-IN")}
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, bold }) {
+  return (
+    <div style={{ display: "flex", marginBottom: "2px", fontSize: "8.5px" }}>
+      <span style={{ color: "#555", minWidth: "120px" }}>{label}</span>
+      <span style={{ marginLeft: "4px", fontWeight: bold ? "bold" : "500" }}>: {value ?? "—"}</span>
+    </div>
+  );
+}
+function QtyRow({ label, value, bold }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px", fontSize: "8.5px" }}>
+      <span style={{ color: "#555" }}>{label}</span>
+      <span style={{ fontWeight: bold ? "bold" : "normal", marginLeft: "8px" }}>
+        : {parseFloat(value || 0).toFixed(2)} M³
+      </span>
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function BatchReport() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -68,9 +341,7 @@ export default function BatchReport() {
   const printRef = useRef();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  // actuals state — one row per batch
-  const [actuals, setActuals] = useState(null); // initialised after data loads
+  const [actuals, setActuals] = useState(null);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -83,234 +354,84 @@ export default function BatchReport() {
     return <div className="p-8 text-gray-500">No batch report — this delivery has no plant type selected.</div>;
   }
 
+  const cols = COLS[data.plant_type] || M125_COLS;
   const { numBatches, batchSize } = calcBatches(parseFloat(data.quantity_m3), data.plant_type);
-  const ingredients = INGREDIENTS[data.plant_type] || INGREDIENTS["M1.25"];
   const dm = data.design_mix;
 
-  // Initialise actuals from saved data or zeros
-  const getActuals = () => {
+  // initialise actuals
+  const getRows = () => {
     if (actuals) return actuals;
-    const saved_rows = data.batch_actuals || [];
     return Array.from({ length: numBatches }, (_, i) => {
-      const saved = saved_rows.find(r => r.batch_sequence === i + 1);
+      const saved_row = (data.batch_actuals || []).find(r => r.batch_sequence === i + 1);
       const row = { batch_sequence: i + 1, batch_size_m3: batchSize };
-      ingredients.forEach(ing => {
-        row[ing.key + "_actual"] = saved ? parseFloat(saved[ing.key + "_actual"] || 0) : targetForIngredient(dm, ing.key, batchSize);
+      cols.forEach(c => {
+        const tgt = parseFloat(dm?.[c.key] || 0) * batchSize;
+        row[c.key + "_actual"] = saved_row
+          ? parseFloat(saved_row[c.key + "_actual"] || 0)
+          : tgt;
       });
       return row;
     });
   };
 
-  const rows = getActuals();
+  const rows = getRows();
 
-  function updateActual(batchIdx, key, value) {
-    const updated = rows.map((r, i) => i === batchIdx ? { ...r, [key + "_actual"]: parseFloat(value) || 0 } : r);
-    setActuals(updated);
+  function handleActualChange(bIdx, key, value) {
+    setActuals(prev => {
+      const r = prev || rows;
+      return r.map((row, i) => i === bIdx ? { ...row, [key + "_actual"]: parseFloat(value) || 0 } : row);
+    });
     setSaved(false);
   }
 
   async function saveActuals() {
     setSaving(true);
     try {
-      await api.post(`/deliveries/${id}/batch-actuals`, { rows: rows.map(r => ({ ...r })) });
+      await api.post(`/deliveries/${id}/batch-actuals`, { rows });
       setSaved(true);
     } finally {
       setSaving(false);
     }
   }
 
-  const dateStr = data.delivery_date ? new Date(data.delivery_date + "T00:00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
-
-  // Column totals
-  const setTotals = ingredients.map(ing => rows.reduce((s, _) => s + targetForIngredient(dm, ing.key, batchSize), 0));
-  const actualTotals = ingredients.map(ing => rows.reduce((s, r) => s + (parseFloat(r[ing.key + "_actual"]) || 0), 0));
-  const totalSetWeight = setTotals.reduce((a, b) => a + b, 0);
-  const totalActualWeight = actualTotals.reduce((a, b) => a + b, 0);
-  const diffPct = totalSetWeight > 0 ? ((totalActualWeight - totalSetWeight) / totalSetWeight * 100).toFixed(2) : "0.00";
-
-  const S = { border: "1px solid #000", padding: "2px 4px", fontSize: "8px", textAlign: "right" };
-  const SH = { ...S, backgroundColor: "#1e3a5f", color: "#fff", textAlign: "center", fontWeight: "bold" };
-  const SL = { ...S, backgroundColor: "#f0f4f8", fontWeight: "bold", textAlign: "left" };
-
   return (
     <div>
       {/* Toolbar */}
       <div className="no-print flex items-center gap-3 p-4 bg-white border-b sticky top-0 z-10">
-        <button className="btn-secondary flex items-center gap-1" onClick={() => navigate(-1)}><ArrowLeft size={15} /> Back</button>
-        <span className="text-sm font-semibold text-primary">Batch Report — {data.plant_type} | Batch #{data.batch_number}</span>
+        <button className="btn-secondary flex items-center gap-1" onClick={() => navigate(-1)}>
+          <ArrowLeft size={15} /> Back
+        </button>
+        <span className="text-sm font-semibold text-primary">
+          Batch Report — {data.plant_type} | Batch #{data.batch_number} | {data.grade_name}
+        </span>
         <div className="flex items-center gap-2 ml-auto">
           <button className="btn-secondary flex items-center gap-1" onClick={saveActuals} disabled={saving}>
             <Save size={14} /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save Actuals"}
           </button>
-          <button className="btn-primary flex items-center gap-1" onClick={handlePrint}><Printer size={15} /> Print</button>
+          <button className="btn-primary flex items-center gap-1" onClick={handlePrint}>
+            <Printer size={15} /> Print
+          </button>
         </div>
       </div>
 
-      <div ref={printRef} style={{ padding: "8mm", backgroundColor: "#fff", maxWidth: "297mm", margin: "0 auto", overflowX: "auto" }}>
+      {/* Print area */}
+      <div ref={printRef} style={{ backgroundColor: "#fff" }}>
         <style>{`
           @media print {
-            @page { size: A4 landscape; margin: 6mm; }
-            body { margin: 0; font-size: 8px; }
+            @page { size: A4 landscape; margin: 5mm; }
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .print-only { display: inline !important; }
           }
+          @media screen { .print-only { display: none !important; } }
         `}</style>
-
-        {/* Company header */}
-        <div style={{ textAlign: "center", marginBottom: "6px", fontFamily: "Arial, sans-serif" }}>
-          <div style={{ fontSize: "13px", fontWeight: "bold", color: "#1e3a5f" }}>SRI AMMAN READY MIX CONCRETE</div>
-          <div style={{ fontSize: "9px", color: "#555" }}>198/1, Chennapalli Post, Chinnar, Krishnagiri, Tamil Nadu – 635117</div>
-          <div style={{ fontSize: "10px", fontWeight: "bold", marginTop: "3px" }}>BATCH REPORT — {data.plant_type} PLANT</div>
-        </div>
-
-        {/* Batch header info */}
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "6px", fontSize: "9px", fontFamily: "Arial, sans-serif" }}>
-          <tbody>
-            <tr>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="Batch Date" value={dateStr} />
-                <InfoRow label="Batch No" value={data.batch_number} />
-              </td>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="DC Number" value={data.dc_number} mono />
-                <InfoRow label="Plant" value={data.plant_type} />
-              </td>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="Grade" value={data.grade_name} />
-                <InfoRow label="Pumping" value={data.pumping_name || "—"} />
-              </td>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="Customer" value={data.customer_name} />
-                <InfoRow label="Site Location" value={data.site_location} />
-              </td>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="Ordered Qty" value={`${data.quantity_m3} m³`} />
-                <InfoRow label="No. of Batches" value={numBatches} />
-              </td>
-              <td style={{ width: "14%", paddingRight: "6px" }}>
-                <InfoRow label="Batch Size" value={`${batchSize} m³`} />
-                <InfoRow label="Max Batch" value={`${MAX_BATCH[data.plant_type]} m³`} />
-              </td>
-              <td style={{ width: "16%" }}>
-                <InfoRow label="Total Density" value={dm ? `${parseFloat(dm.total_density).toFixed(1)} kg/m³` : "—"} />
-                <InfoRow label="Time" value={data.delivery_time?.slice(0, 5)} />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Main batch table — ingredient rows, batch columns */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", fontSize: "8px", fontFamily: "Arial, sans-serif", width: "100%" }}>
-            <thead>
-              <tr>
-                <th style={{ ...SH, width: "70px", textAlign: "left" }}>Ingredient</th>
-                <th style={{ ...SH, width: "55px" }}>Design Mix<br />(kg/m³)</th>
-                {Array.from({ length: numBatches }, (_, i) => (
-                  <th key={i} style={{ ...SH, minWidth: "70px" }} colSpan={2}>
-                    Batch {i + 1}<br />({batchSize} m³)
-                  </th>
-                ))}
-                <th style={{ ...SH, minWidth: "65px" }} colSpan={2}>Totals</th>
-              </tr>
-              <tr>
-                <th style={SH}></th>
-                <th style={SH}></th>
-                {Array.from({ length: numBatches }, (_, i) => (
-                  <>
-                    <th key={`t${i}`} style={{ ...SH, backgroundColor: "#2d5f8a" }}>Target</th>
-                    <th key={`a${i}`} style={{ ...SH, backgroundColor: "#c45c00" }}>Actual</th>
-                  </>
-                ))}
-                <th style={{ ...SH, backgroundColor: "#2d5f8a" }}>Set Wt</th>
-                <th style={{ ...SH, backgroundColor: "#c45c00" }}>Actual</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ingredients.map((ing, iIdx) => (
-                <tr key={ing.key} style={{ backgroundColor: iIdx % 2 === 0 ? "#fff" : "#f9fafb" }}>
-                  <td style={{ ...S, textAlign: "left", fontWeight: "500" }}>{ing.label}</td>
-                  <td style={S}>{dm ? n(dm[ing.key]) : "—"}</td>
-                  {rows.map((row, bIdx) => {
-                    const target = targetForIngredient(dm, ing.key, batchSize);
-                    return (
-                      <>
-                        <td key={`t${bIdx}`} style={{ ...S, color: "#1e3a5f" }}>{n(target)}</td>
-                        <td key={`a${bIdx}`} style={{ ...S, padding: "1px" }}>
-                          <input
-                            type="number" step="0.001" min="0"
-                            className="no-print"
-                            value={row[ing.key + "_actual"] ?? target}
-                            onChange={e => updateActual(bIdx, ing.key, e.target.value)}
-                            style={{ width: "100%", border: "none", textAlign: "right", fontSize: "8px", padding: "1px 2px", background: "transparent" }}
-                          />
-                          <span className="print-only" style={{ display: "none" }}>
-                            {n(row[ing.key + "_actual"] ?? target)}
-                          </span>
-                        </td>
-                      </>
-                    );
-                  })}
-                  <td style={{ ...S, color: "#1e3a5f", fontWeight: "bold" }}>{n(setTotals[iIdx])}</td>
-                  <td style={{ ...S, color: "#c45c00", fontWeight: "bold" }}>{n(actualTotals[iIdx])}</td>
-                </tr>
-              ))}
-
-              {/* Totals row */}
-              <tr style={{ backgroundColor: "#e8f0fe", fontWeight: "bold" }}>
-                <td style={{ ...SL }} colSpan={2}>Total Weight (kg)</td>
-                {Array.from({ length: numBatches }, (_, i) => {
-                  const setW = ingredients.reduce((s, ing) => s + targetForIngredient(dm, ing.key, batchSize), 0);
-                  const actW = ingredients.reduce((s, ing) => s + (parseFloat(rows[i]?.[ing.key + "_actual"]) || 0), 0);
-                  return (
-                    <>
-                      <td key={`ts${i}`} style={{ ...S, fontWeight: "bold", color: "#1e3a5f" }}>{setW.toFixed(3)}</td>
-                      <td key={`as${i}`} style={{ ...S, fontWeight: "bold", color: "#c45c00" }}>{actW.toFixed(3)}</td>
-                    </>
-                  );
-                })}
-                <td style={{ ...S, color: "#1e3a5f", fontWeight: "bold" }}>{totalSetWeight.toFixed(3)}</td>
-                <td style={{ ...S, color: "#c45c00", fontWeight: "bold" }}>{totalActualWeight.toFixed(3)}</td>
-              </tr>
-
-              {/* Diff % row */}
-              <tr style={{ backgroundColor: parseFloat(diffPct) > 2 || parseFloat(diffPct) < -2 ? "#fff3cd" : "#f0fff4" }}>
-                <td style={{ ...SL }} colSpan={2 + numBatches * 2 + 1}>Difference %</td>
-                <td style={{ ...S, fontWeight: "bold", color: parseFloat(diffPct) > 2 ? "#c53030" : "#276749" }}>
-                  {diffPct}%
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <table style={{ width: "100%", marginTop: "8px", borderCollapse: "collapse", fontSize: "9px", fontFamily: "Arial, sans-serif" }}>
-          <tbody>
-            <tr>
-              <td style={{ width: "25%", paddingRight: "8px" }}>
-                <InfoRow label="Mixer Capacity" value={`${MAX_BATCH[data.plant_type]} m³`} />
-              </td>
-              <td style={{ width: "25%", paddingRight: "8px" }}>
-                <InfoRow label="No. of Batches" value={numBatches} />
-              </td>
-              <td style={{ width: "25%", paddingRight: "8px" }}>
-                <InfoRow label="Total Qty" value={`${data.quantity_m3} m³`} />
-              </td>
-              <td style={{ width: "25%", textAlign: "right" }}>
-                <div style={{ borderTop: "1px solid #000", paddingTop: "4px", marginTop: "16px", fontSize: "8px" }}>Batch Controller Signature</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <BatchReportPrint
+          d={data}
+          cols={cols}
+          rows={rows}
+          onActualChange={handleActualChange}
+        />
       </div>
-    </div>
-  );
-}
-
-function InfoRow({ label, value, mono }) {
-  return (
-    <div style={{ marginBottom: "3px" }}>
-      <span style={{ fontSize: "7px", color: "#888", textTransform: "uppercase" }}>{label}: </span>
-      <span style={{ fontWeight: "bold", fontFamily: mono ? "monospace" : "inherit", fontSize: "8px" }}>{value ?? "—"}</span>
     </div>
   );
 }
