@@ -218,7 +218,7 @@ function M125Print({ d, rows, onActualChange }) {
       {/* ══ INFO SECTION — rows 2,4,6,8,10,12 of Excel ═════════════════════ */}
       {/* 3 columns × 6 rows, white bg, bold labels, gray dotted borders     */}
       <table style={{ width: "100%", borderCollapse: "collapse",
-        marginBottom: "3px", border: DOT }}>
+        marginBottom: "3px", border: INNER}}>
         <tbody>
           <tr>
             <IC label="Batch Date"        value={dateStr} />
@@ -437,7 +437,7 @@ function M125Print({ d, rows, onActualChange }) {
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
-        borderTop: DOT, marginTop: "3px", paddingTop: "2px" }}>
+        borderTop: INNER, marginTop: "3px", paddingTop: "2px" }}>
         <tbody>
           <tr>
             <td style={{ width: "45%", fontFamily: F, fontSize: "7px", verticalAlign: "middle" }}>
