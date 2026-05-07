@@ -7,150 +7,34 @@ import { useReactToPrint } from "react-to-print";
 import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import { WeighSlipTemplate } from "../print/WeighmentSlip";
 
 const TABS = ["OUTWARD", "INWARD"];
 const today = format(new Date(), "yyyy-MM-dd");
 const nowTime = format(new Date(), "HH:mm");
 
-// ── Shared Weighment Slip (identical format for INWARD and OUTWARD) ──────────
-function WeighSlip({ rec }) {
-  if (!rec) return null;
-
-  const dt = rec.weigh_date ? new Date(rec.weigh_date + "T00:00:00") : null;
-  const dateStr = dt
-    ? `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()}`
-    : "—";
-
-  const t = rec.weigh_time?.slice(0, 5) || "";
-  const [h, m] = t.split(":");
-  const hr = parseInt(h || 0);
-  const timeStr = t ? `${String(hr % 12 || 12).padStart(2,"0")}:${m} ${hr >= 12 ? "PM" : "AM"}` : "—";
-
-  const loadedWt = rec.gross_weight_kg ? Number(rec.gross_weight_kg).toLocaleString("en-IN") : "—";
-  const tare     = rec.tare_weight_kg  ? Number(rec.tare_weight_kg).toLocaleString("en-IN")  : "—";
-  const netWt    = rec.net_weight_kg   ? Number(rec.net_weight_kg).toLocaleString("en-IN")   : "—";
-
-  const R = { fontFamily: "Arial, sans-serif" };
-  const lbl = { ...R, fontSize: "10px", color: "#333", paddingBottom: "6px" };
-  const val = { ...R, fontSize: "10px", fontWeight: "500", paddingBottom: "6px" };
-
-  return (
-    <div style={{ ...R, maxWidth: "175mm", margin: "0 auto", border: "1px solid #ccc" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", padding: "5mm 6mm 4mm", borderBottom: "2px solid #000" }}>
-        <svg width="58" height="58" viewBox="0 0 60 60">
-          <rect width="60" height="60" fill="white" />
-          <polygon points="8,52 30,8 52,52 44,52 30,22 16,52" fill="#2d7a2d" />
-          <polygon points="16,52 30,24 44,52 37,52 30,32 23,52" fill="white" />
-        </svg>
-        <div style={{ marginLeft: "8px" }}>
-          <div style={{ ...R, fontSize: "16px", fontWeight: "bold" }}>SRI AMMAN CONSTRUCTION AND EQUIPMENTS</div>
-          <div style={{ ...R, fontSize: "10px", marginTop: "2px" }}>CHINNAR ,SHOOLAGIRI</div>
-          <div style={{ ...R, fontSize: "10px" }}>KRISHNAGIRI-635117</div>
-        </div>
-      </div>
-
-      <div style={{ padding: "4mm 6mm" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td style={lbl}>Date:</td>
-              <td style={val}>{dateStr}</td>
-              <td style={{ width: "8px" }}></td>
-              <td style={lbl}></td><td style={val}></td>
-            </tr>
-            <tr>
-              <td style={lbl}>Time:</td>
-              <td style={val}>{timeStr}</td>
-              <td></td>
-              <td style={lbl}></td><td style={val}></td>
-            </tr>
-            <tr>
-              <td style={lbl}>Ticket Number:</td>
-              <td style={{ ...val, fontFamily: "monospace" }}>{rec.ticket_number}</td>
-              <td></td>
-              <td style={lbl}>Material:</td>
-              <td style={val}>{(rec.material_description || "—").toUpperCase()}</td>
-            </tr>
-            <tr>
-              <td style={lbl}>Challan No:</td>
-              <td style={{ ...val, fontSize: "9px", fontFamily: "monospace" }}>{rec.dc_number || "—"}</td>
-              <td></td>
-              <td style={lbl}>Supplier:</td>
-              <td style={val}>{rec.supplier || "SRI AMMAN"}</td>
-            </tr>
-            <tr>
-              <td style={lbl}>Vehicle Number:</td>
-              <td style={{ ...val, fontWeight: "bold", fontSize: "11px" }}>{rec.vehicle_number?.toUpperCase() || "—"}</td>
-              <td></td>
-              <td style={lbl}>Driver:</td>
-              <td style={{ ...val, textTransform: "uppercase" }}>{rec.driver_name || "—"}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style={{ margin: "3mm 0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr>
-                <td style={{ ...lbl, width: "38%", paddingBottom: "8px" }}>Loaded Weight:</td>
-                <td style={{ paddingBottom: "8px" }}>
-                  <strong style={{ ...R, fontSize: "13px" }}>{loadedWt}</strong>
-                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
-                </td>
-                <td style={{ width: "8px" }}></td>
-                <td style={{ ...lbl, width: "28%" }}></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td style={{ ...lbl, paddingBottom: "8px" }}>Empty Weight:</td>
-                <td style={{ paddingBottom: "8px" }}>
-                  <span style={{ ...R, fontSize: "11px" }}>{tare}</span>
-                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
-                </td>
-                <td></td>
-                <td style={lbl}>Grade of material:</td>
-                <td style={val}></td>
-              </tr>
-              <tr>
-                <td style={{ ...lbl, paddingBottom: "8px" }}>
-                  <strong style={{ fontSize: "11px" }}>Net Weight:</strong>
-                </td>
-                <td style={{ paddingBottom: "8px" }}>
-                  <strong style={{ ...R, fontSize: "15px" }}>{netWt}</strong>
-                  <span style={{ ...R, fontSize: "10px", marginLeft: "8px" }}>kg</span>
-                </td>
-                <td></td>
-                <td style={lbl}>Operator&nbsp; Name:</td>
-                <td style={{ ...val, textTransform: "uppercase" }}>ADMIN</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {rec.remarks && (
-          <div style={{ ...R, fontSize: "9px", color: "#555", marginBottom: "3mm" }}>
-            Remarks: {rec.remarks}
-          </div>
-        )}
-
-        <table style={{ width: "100%", marginTop: "8mm" }}>
-          <tbody>
-            <tr>
-              <td style={{ width: "40%", ...lbl }}>Client Signature</td>
-              <td style={{ width: "20%" }}></td>
-              <td style={{ width: "40%", ...lbl, textAlign: "right" }}>Operator Signature</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style={{ borderTop: "1px solid #ccc" }}></div>
-    </div>
-  );
+// Map weighment record fields to the shared template's expected shape
+function slipData(rec) {
+  return {
+    ...rec,
+    weigh_date: rec.weigh_date,
+    weigh_time: rec.weigh_time,
+    delivery_time: rec.weigh_time,
+    delivery_date: rec.weigh_date,
+    ticket_number: rec.ticket_number,
+    dc_number: rec.dc_number || "",
+    vehicle_number: rec.vehicle_number,
+    driver_name: rec.driver_name,
+    material_name: rec.material_description || "MATERIAL",
+    grade_name: "",
+    supplier: rec.supplier || "SRI AMMAN",
+    gross_weight_kg: rec.gross_weight_kg,
+    empty_weight_kg: rec.tare_weight_kg,
+    net_weight_kg: rec.net_weight_kg,
+    operator_name: "ADMIN",
+    id: rec.id,
+  };
 }
-
-// keep alias for backward compat
-function InwardSlip({ rec }) { return <WeighSlip rec={rec} />; }
 
 
 // ── Outward Tab ───────────────────────────────────────────────────────────────
@@ -320,7 +204,7 @@ function InwardTab() {
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <button className="text-gray-400 hover:text-primary" title="Print slip"
-                        onClick={() => { setPrintRec(r); setTimeout(handlePrint, 100); }}>
+                        onClick={() => { setPrintRec(r); requestAnimationFrame(() => handlePrint()); }}>
                         <Printer size={14} />
                       </button>
                       <button className="text-gray-400 hover:text-red-500"
@@ -339,11 +223,11 @@ function InwardTab() {
         </div>
       )}
 
-      {/* Hidden print area */}
+      {/* Hidden print area — uses exact same template as outward slip */}
       <div style={{ display: "none" }}>
         <div ref={printRef}>
-          <style>{`@media print { @page { size: A5 portrait; margin: 6mm; } }`}</style>
-          <InwardSlip rec={printRec} />
+          <style>{`@media print { @page { size: A5 portrait; margin: 4mm; } body { margin: 0; } }`}</style>
+          {printRec && <WeighSlipTemplate data={slipData(printRec)} type="INWARD" />}
         </div>
       </div>
 
