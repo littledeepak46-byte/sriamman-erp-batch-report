@@ -257,20 +257,20 @@ function M125Print({ d, rows, onActualChange }) {
       <div style={{ border: OUTER, marginBottom: "0" }}>
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
-          {/* Row 13 — Category header (height 16.5 pt from Excel) */}
-          <tr style={{ height: "16.5pt" }}>
+          {/* Row 13 — Category header — compact (PDF ref: ~11pt) */}
+          <tr style={{ height: "11pt" }}>
             {cats.map((g, i) => (
               <th key={i} colSpan={g.span} style={chc}>{g.cat}</th>
             ))}
           </tr>
-          {/* Row 14 — Column names (height 21 pt from Excel) */}
-          <tr style={{ height: "21pt" }}>
+          {/* Row 14 — Column names — slightly taller for 2-line headers */}
+          <tr style={{ height: "16pt" }}>
             {cols.map(c => (
               <th key={c.key} style={{ ...thc, width: c.w }}>{c.hdr}</th>
             ))}
           </tr>
-          {/* Row 15 — Recipe targets per 1 m³ (height 21 pt) */}
-          <tr style={{ height: "21pt" }}>
+          {/* Row 15 — Recipe per m³ — compact */}
+          <tr style={{ height: "12pt" }}>
             {recPerM3.map((v, i) => (
               <td key={i} style={{ ...rtr, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
@@ -280,8 +280,8 @@ function M125Print({ d, rows, onActualChange }) {
         </thead>
 
         <tbody>
-          {/* Row 16 — Mass of Recipe Targets in Kgs. (height 21 pt) */}
-          <tr style={{ height: "21pt" }}>
+          {/* Row 16 — Mass of Recipe Targets — compact */}
+          <tr style={{ height: "11pt" }}>
             <td colSpan={NCOLS - 1}
               style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
@@ -290,8 +290,8 @@ function M125Print({ d, rows, onActualChange }) {
             <td style={{ ...tc, fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</td>
           </tr>
 
-          {/* Row 17 — Per-batch target (height 17.25 pt from Excel) */}
-          <tr style={{ height: "17.25pt" }}>
+          {/* Row 17 — Per-batch target — compact */}
+          <tr style={{ height: "12pt" }}>
             {batchTgt.map((v, i) => (
               <td key={i} style={{ ...tc, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
@@ -299,8 +299,8 @@ function M125Print({ d, rows, onActualChange }) {
             ))}
           </tr>
 
-          {/* Row 18 — Label band (height 21 pt) */}
-          <tr style={{ height: "21pt" }}>
+          {/* Row 18 — Label band — compact */}
+          <tr style={{ height: "12pt" }}>
             <td colSpan={NCOLS} style={lbl}>
               Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
             </td>
@@ -309,25 +309,26 @@ function M125Print({ d, rows, onActualChange }) {
           {/* ── Rows 19–63: Per-batch groups (5 rows each) ───────────────── */}
           {rows.map((row, bIdx) => [
 
-            /* Row 1 of 5 — Target (height 21.75 pt) */
-            <tr key={`t${bIdx}`} style={{ height: "21.75pt" }}>
+            /* Row 1 of 5 — Target — compact, integers only */
+            <tr key={`t${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w }}>
-                  {batchTgt[i] === 0 ? "0.00"
-                    : c.dec ? batchTgt[i].toFixed(c.dec) : batchTgt[i].toFixed(2)}
+                  {batchTgt[i] === 0 ? "0"
+                    : c.dec ? batchTgt[i].toFixed(c.dec) : fv(batchTgt[i])}
                 </td>
               ))}
             </tr>,
 
-            /* Row 2 of 5 — Actual (height 21.75 pt) */
-            <tr key={`a${bIdx}`} style={{ height: "21.75pt" }}>
+            /* Row 2 of 5 — Actual — compact, integers only */
+            <tr key={`a${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => {
                 const act   = parseFloat(row[c.key + "_actual"] || 0);
                 const tgt   = batchTgt[i];
                 const offBy = tgt > 0 ? Math.abs(act - tgt) / tgt : 0;
+                const disp  = act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : fv(act);
                 return (
                   <td key={c.key} style={{ ...tc, width: c.w,
-                    color: offBy > 0.05 ? "red" : "black", padding: "0 1px" }}>
+                    color: offBy > 0.05 ? "red" : "black", padding: "0 2pt" }}>
                     <input
                       className="no-print"
                       type="number" step="0.001"
@@ -336,40 +337,35 @@ function M125Print({ d, rows, onActualChange }) {
                       style={{ width: "100%", border: "none", textAlign: "right",
                         fontSize: fs, padding: 0, background: "transparent", outline: "none" }}
                     />
-                    <span className="print-only" style={{ display: "none" }}>
-                      {act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : act.toFixed(2)}
-                    </span>
+                    <span className="print-only" style={{ display: "none" }}>{disp}</span>
                   </td>
                 );
               })}
             </tr>,
 
-            /* Row 3 of 5 — Correction (height 21.75 pt) */
-            <tr key={`c${bIdx}`} style={{ height: "21.75pt" }}>
+            /* Row 3 of 5 — Correction — compact */
+            <tr key={`c${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => {
-                const act  = parseFloat(row[c.key + "_actual"] || 0);
-                const diff = act - batchTgt[i];
+                const diff = parseFloat(row[c.key + "_actual"] || 0) - batchTgt[i];
                 return (
-                  <td key={c.key} style={{ ...tc, width: c.w,
-                    color: "#555", fontSize: "8pt" }}>
-                    {diff === 0 ? "0.00" : diff.toFixed(2)}
+                  <td key={c.key} style={{ ...tc, width: c.w, color: "#555", fontSize: "8pt" }}>
+                    {diff === 0 ? "0" : c.dec ? diff.toFixed(c.dec) : fv(diff)}
                   </td>
                 );
               })}
             </tr>,
 
-            /* Row 4 of 5 — Blank zeros (height 21.75 pt) */
-            <tr key={`z${bIdx}`} style={{ height: "21.75pt" }}>
+            /* Row 4 of 5 — Blank zeros — compact */
+            <tr key={`z${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => (
-                <td key={c.key} style={{ ...tc, width: c.w,
-                  color: "#aaa", fontSize: "8pt" }}>
-                  {c.dec ? "0.00" : "0"}
+                <td key={c.key} style={{ ...tc, width: c.w, color: "#aaa", fontSize: "8pt" }}>
+                  0
                 </td>
               ))}
             </tr>,
 
-            /* Row 5 of 5 — Empty separator (height 4.5 pt from Excel) */
-            <tr key={`e${bIdx}`} style={{ height: "4.5pt" }}>
+            /* Row 5 of 5 — Empty separator — very thin */
+            <tr key={`e${bIdx}`} style={{ height: "3pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w, padding: "0" }} />
               ))}
@@ -379,17 +375,17 @@ function M125Print({ d, rows, onActualChange }) {
           {/* ══ TOTALS SECTION — rows 64–72 of Excel ═══════════════════════ */}
 
           {/* Row 64 — Total Set Weight label */}
-          <tr><td colSpan={NCOLS} style={sec}>Total Set Weight in Kgs.</td></tr>
-          {/* Row 65 — Total Set Weight values */}
-          <tr>
+          <tr style={{ height: "11pt" }}><td colSpan={NCOLS} style={sec}>Total Set Weight in Kgs.</td></tr>
+          {/* Row 65 — Total Set Weight values — compact, integers */}
+          <tr style={{ height: "12pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {setTotals[i] === 0 ? "0" : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
               </td>
             ))}
           </tr>
-          {/* Row 66 — Mass of Total Set Weight (right-aligned) */}
-          <tr>
+          {/* Row 66 — Mass of Total Set Weight */}
+          <tr style={{ height: "11pt" }}>
             <td colSpan={NCOLS - 1}
               style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
@@ -399,29 +395,33 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
 
           {/* Row 67 — Total Actual Weight label */}
-          <tr><td colSpan={NCOLS} style={sec}>Total Actual Weight in Kgs.</td></tr>
-          {/* Row 68 — Total Actual Weight values */}
-          <tr>
+          <tr style={{ height: "11pt" }}>
+            <td colSpan={NCOLS} style={sec}>Total Actual Weight in Kgs.</td>
+          </tr>
+          {/* Row 68 — Total Actual Weight values — integers */}
+          <tr style={{ height: "12pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {actTotals[i] === 0 ? "0" : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
               </td>
             ))}
           </tr>
-          {/* Row 69 — Mass of Total Actual Weight (right-aligned) */}
-          <tr>
+          {/* Row 69 — Mass of Total Actual Weight */}
+          <tr style={{ height: "11pt" }}>
             <td colSpan={NCOLS - 1}
               style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
-              Mass of Total Actual Set Weight in Kgs.
+              Mass of Total Actual Weight in Kgs.
             </td>
             <td style={{ ...tc, fontWeight: "bold" }}>{massAct.toFixed(2)}</td>
           </tr>
 
           {/* Row 70 — Difference in Percentage label */}
-          <tr><td colSpan={NCOLS} style={{ ...sec, color: "black" }}>Difference in Percentage</td></tr>
-          {/* Row 72 — Percentage values (actual−set)/set×100 — from Excel row 72 */}
-          <tr>
+          <tr style={{ height: "11pt" }}>
+            <td colSpan={NCOLS} style={{ ...sec, color: "black" }}>Difference in Percentage</td>
+          </tr>
+          {/* Row 72 — Percentage values — 2 decimals */}
+          <tr style={{ height: "12pt" }}>
             {cols.map((c, i) => {
               const pct = parseFloat(diffPctVal(setTotals[i], actTotals[i]));
               return (
