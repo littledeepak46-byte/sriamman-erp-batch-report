@@ -89,11 +89,11 @@ function fv2(v) { return parseFloat(v || 0).toFixed(2); }
 // ── Shared cell / font styles ─────────────────────────────────────────────────
 const FONT = "Arial, Helvetica, sans-serif";
 const B1   = "1px solid #000";
-const TD   = { border: B1, padding: "1px 2px", fontSize: "7.5px", textAlign: "right",
+const TD   = { border: B1, padding: "1px 2px", fontSize: "9pt", textAlign: "right",
                fontFamily: FONT, whiteSpace: "nowrap" };
 const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
                whiteSpace: "pre-line" };
-const CAT  = { ...TH, fontSize: "7.5px", borderBottom: B1 };
+const CAT  = { ...TH, fontSize: "9pt", borderBottom: B1 };
 
 // ── Schwing Stetter Logo — dark green (left) + light green (right) ────────────
 function Logo({ size = 52 }) {
@@ -168,19 +168,21 @@ function M125Print({ d, rows, onActualChange }) {
     return ((a - s) / s * 100).toFixed(2);
   };
 
-  // ── Design tokens — mirrors Excel: white bg, gray dotted borders ──────────
+  // ── Design tokens — mirrors Excel exactly ─────────────────────────────────
+  // Excel uses 16pt for ALL cells. With fit-to-page scale ≈ 0.636,
+  // actual printed size ≈ 10pt. We use 9pt to be safe with HTML margins.
   const F   = FONT;
-  const fs  = "7px";
-  const DOT = "1px dotted #aaa";   // gray dotted border (Excel style)
-  const PAD = "1px 3px";
+  const fs  = "9pt";              // 16pt × 0.636 ≈ 10pt → use 9pt
+  const DOT = "1px dotted #aaa"; // gray dotted border (Excel style)
+  const PAD = "1pt 2pt";         // match Excel cell padding in pt
 
-  // Base cell
+  // Base cell — 9pt, white bg, right-aligned
   const tc  = { border: DOT, padding: PAD, fontSize: fs, textAlign: "right",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
-  // Header: white bg + bold + centered (category & column name rows)
+  // Header cells — bold, centered (category & column name rows)
   const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "pre-line" };
-  // Category row: bold, slightly larger
-  const chc = { ...thc, fontSize: "7.5px" };
+  // Category row — same as thc (bold)
+  const chc = { ...thc };
   // Recipe per m³ row: bold
   const rtr = { ...tc, fontWeight: "bold" };
   // Label-band: left-aligned, italic
@@ -198,9 +200,9 @@ function M125Print({ d, rows, onActualChange }) {
         <div style={{ flexShrink: 0, marginRight: "8px" }}>
           <Logo size={52} />
         </div>
-        {/* Company name — centered */}
+        {/* Company name — centered, 16pt bold (matches Excel header) */}
         <div style={{ flex: 1, textAlign: "center" }}>
-          <div style={{ fontSize: "15px", fontWeight: "bold", fontFamily: F,
+          <div style={{ fontSize: "16pt", fontWeight: "bold", fontFamily: F,
             lineHeight: "1.2", letterSpacing: "0.5px" }}>
             SRI AMMAN READY MIX CONCRETE
           </div>
@@ -274,7 +276,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 16 — Mass of Recipe Targets in Kgs. (height 21 pt) */}
           <tr style={{ height: "21pt" }}>
             <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "6.5px",
+              style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
               Mass of Recipe Targets in Kgs.
             </td>
@@ -342,7 +344,7 @@ function M125Print({ d, rows, onActualChange }) {
                 const diff = act - batchTgt[i];
                 return (
                   <td key={c.key} style={{ ...tc, width: c.w,
-                    color: "#555", fontSize: "6.5px" }}>
+                    color: "#555", fontSize: "8pt" }}>
                     {diff === 0 ? "0.00" : diff.toFixed(2)}
                   </td>
                 );
@@ -353,7 +355,7 @@ function M125Print({ d, rows, onActualChange }) {
             <tr key={`z${bIdx}`} style={{ height: "21.75pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w,
-                  color: "#aaa", fontSize: "6.5px" }}>
+                  color: "#aaa", fontSize: "8pt" }}>
                   {c.dec ? "0.00" : "0"}
                 </td>
               ))}
@@ -382,7 +384,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 66 — Mass of Total Set Weight (right-aligned) */}
           <tr>
             <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "6.5px",
+              style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
               Mass of Total Set Weight in Kgs.
             </td>
@@ -402,7 +404,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 69 — Mass of Total Actual Weight (right-aligned) */}
           <tr>
             <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "6.5px",
+              style={{ ...tc, textAlign: "right", fontSize: "8pt",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
               Mass of Total Actual Set Weight in Kgs.
             </td>
@@ -435,7 +437,7 @@ function M125Print({ d, rows, onActualChange }) {
                 <Logo size={16} />
                 <span style={{ fontWeight: "bold" }}>Schwing Stetter</span>
               </div>
-              <div style={{ fontSize: "6.5px", color: "#444" }}>
+              <div style={{ fontSize: "8pt", color: "#444" }}>
                 MCI 550 ver 1.0 Statistical Report
               </div>
             </td>
@@ -454,7 +456,7 @@ function M125Print({ d, rows, onActualChange }) {
 // ── IC: Info cell helper (bold label : value, no cell borders) ────────────────
 function IC({ label, value, bold }) {
   return (
-    <td style={{ padding: "2px 5px", fontFamily: FONT, fontSize: "8px",
+    <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "9pt",
       verticalAlign: "middle", width: "33%" }}>
       <span style={{ fontWeight: "bold" }}>{label}</span>
       <span style={{ color: "#555" }}> : </span>
@@ -497,12 +499,12 @@ function CP30Print({ d, rows, onActualChange }) {
           <tr>
             <td style={{ width: "60px", verticalAlign: "top" }}>
               <Logo size={44} />
-              <div style={{ fontSize: "6.5px", color: "#444" }}>SCHWING</div>
-              <div style={{ fontSize: "6.5px", color: "#444" }}>Stetter</div>
+              <div style={{ fontSize: "8pt", color: "#444" }}>SCHWING</div>
+              <div style={{ fontSize: "8pt", color: "#444" }}>Stetter</div>
             </td>
             <td style={{ textAlign: "center" }}>
               <div style={{ fontSize: "14px", fontWeight: "bold" }}>SRI AMMAN</div>
-              <div style={{ fontSize: "7.5px" }}>MCI 70 N Control System Ver 3.1</div>
+              <div style={{ fontSize: "9pt" }}>MCI 70 N Control System Ver 3.1</div>
               <div style={{ fontSize: "9px", fontWeight: "bold", marginTop: "2px" }}>
                 Docket / Batch Report / Autographic Record
               </div>
@@ -574,7 +576,7 @@ function CP30Print({ d, rows, onActualChange }) {
         </thead>
         <tbody>
           <tr>
-            <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic", fontSize: "7.5px" }}>
+            <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic", fontSize: "9pt" }}>
               Actual in Kgs.
             </td>
           </tr>
@@ -590,7 +592,7 @@ function CP30Print({ d, rows, onActualChange }) {
                       value={row[c.key + "_actual"] ?? 0}
                       onChange={e => onActualChange(bIdx, c.key, e.target.value)}
                       style={{ width: "100%", border: "none", textAlign: "right",
-                        fontSize: "7.5px", padding: 0, background: "transparent", outline: "none" }}
+                        fontSize: "9pt", padding: 0, background: "transparent", outline: "none" }}
                     />
                     <span className="print-only" style={{ display: "none" }}>
                       {act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : act.toFixed(0)}
@@ -602,7 +604,7 @@ function CP30Print({ d, rows, onActualChange }) {
           ))}
           <tr>
             <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic",
-              fontSize: "7.5px", borderTop: "1px solid #000" }}>
+              fontSize: "9pt", borderTop: "1px solid #000" }}>
               Total Set Weight in Kgs.
             </td>
           </tr>
@@ -615,7 +617,7 @@ function CP30Print({ d, rows, onActualChange }) {
           </tr>
           <tr>
             <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic",
-              fontSize: "7.5px", borderTop: "1px solid #000" }}>
+              fontSize: "9pt", borderTop: "1px solid #000" }}>
               Total Actual in Kgs.
             </td>
           </tr>
