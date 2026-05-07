@@ -16,31 +16,37 @@ function calcBatches(qty, plantType) {
 
 // ── M1.25 column definitions ─────────────────────────────────────────────────
 // Matches exactly: MSAN D, 20MM, MSAN D, 12MM, 6MM, Agg6 | Cem1-4, CEM5 | Wtr1-3 | Admix1-4 | Silica
+// Column widths come directly from Excel (other Batching Slip.xlsx):
+// Cols 2–19 = 41.25 pt each → 5.17% of total ingredient width
+// Col 20 (Silica) = 54.75 pt → 6.87%  (797.25 pt total = 18×41.25 + 54.75)
+const STD = "5.17%";   // standard column width (41.25 pt in Excel)
+const SIL = "6.87%";   // Silica column width  (54.75 pt in Excel)
+
 const COLS_M125 = [
   // Aggregate (6)
-  { key: "sand1",    hdr: "MSAN\nD",    cat: "Aggregate",  w: 34 },
-  { key: "agg_20mm", hdr: "20MM",       cat: "Aggregate",  w: 32 },
-  { key: "sand2",    hdr: "MSAN\nD",    cat: "Aggregate",  w: 34 },
-  { key: "agg_12mm", hdr: "12MM",       cat: "Aggregate",  w: 32 },
-  { key: "agg_6mm",  hdr: "6MM",        cat: "Aggregate",  w: 28 },
-  { key: "agg6",     hdr: "Agg6",       cat: "Aggregate",  w: 28 },
+  { key: "sand1",    hdr: "MSAN\nD",    cat: "Aggregate",  w: STD },
+  { key: "agg_20mm", hdr: "20MM",       cat: "Aggregate",  w: STD },
+  { key: "sand2",    hdr: "MSAN\nD",    cat: "Aggregate",  w: STD },
+  { key: "agg_12mm", hdr: "12MM",       cat: "Aggregate",  w: STD },
+  { key: "agg_6mm",  hdr: "6MM",        cat: "Aggregate",  w: STD },
+  { key: "agg6",     hdr: "Agg6",       cat: "Aggregate",  w: STD },
   // Cement (5)
-  { key: "cem1",     hdr: "Cem1",       cat: "Cement",     w: 28 },
-  { key: "cem2",     hdr: "Cem2",       cat: "Cement",     w: 28 },
-  { key: "cem3",     hdr: "Cem3",       cat: "Cement",     w: 28 },
-  { key: "cem4",     hdr: "Cem4",       cat: "Cement",     w: 28 },
-  { key: "fly",      hdr: "CEM5",       cat: "Cement",     w: 28 },
+  { key: "cem1",     hdr: "Cem1",       cat: "Cement",     w: STD },
+  { key: "cem2",     hdr: "Cem2",       cat: "Cement",     w: STD },
+  { key: "cem3",     hdr: "Cem3",       cat: "Cement",     w: STD },
+  { key: "cem4",     hdr: "Cem4",       cat: "Cement",     w: STD },
+  { key: "fly",      hdr: "CEM5",       cat: "Cement",     w: STD },
   // Water/Ice (3)
-  { key: "wtr1",     hdr: "Wtr1",       cat: "Water/Ice",  w: 28 },
-  { key: "wtr2",     hdr: "Wtr2",       cat: "Water/Ice",  w: 28 },
-  { key: "wtr3",     hdr: "Wtr3",       cat: "Water/Ice",  w: 28 },
+  { key: "wtr1",     hdr: "Wtr1",       cat: "Water/Ice",  w: STD },
+  { key: "wtr2",     hdr: "Wtr2",       cat: "Water/Ice",  w: STD },
+  { key: "wtr3",     hdr: "Wtr3",       cat: "Water/Ice",  w: STD },
   // Admixture (4)
-  { key: "adx1",     hdr: "Admix\n1",   cat: "Admixture",  w: 32, dec: 2 },
-  { key: "adx2",     hdr: "Admix\n2",   cat: "Admixture",  w: 32, dec: 2 },
-  { key: "adx3",     hdr: "Admix\n3",   cat: "Admixture",  w: 32, dec: 2 },
-  { key: "adx4",     hdr: "Admix\n4",   cat: "Admixture",  w: 32, dec: 2 },
-  // Silica (1)
-  { key: "silica",   hdr: "Silica",     cat: "Silica",     w: 30 },
+  { key: "adx1",     hdr: "Admix\n1",   cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx2",     hdr: "Admix\n2",   cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx3",     hdr: "Admix\n3",   cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx4",     hdr: "Admix\n4",   cat: "Admixture",  w: STD, dec: 2 },
+  // Silica (1) — wider in Excel
+  { key: "silica",   hdr: "Silica",     cat: "Silica",     w: SIL },
 ];
 
 // ── CP30 column definitions ──────────────────────────────────────────────────
@@ -242,23 +248,22 @@ function M125Print({ d, rows, onActualChange }) {
       {/* ══ MATERIAL TABLE — rows 13–18 of Excel ════════════════════════════ */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
-          {/* Row 13 — Category header: Aggregate | Cement | Water/Ice | Admixture | Silica */}
-          {/* White bg, black text, bold, gray dotted borders */}
-          <tr>
+          {/* Row 13 — Category header (height 16.5 pt from Excel) */}
+          <tr style={{ height: "16.5pt" }}>
             {cats.map((g, i) => (
               <th key={i} colSpan={g.span} style={chc}>{g.cat}</th>
             ))}
           </tr>
-          {/* Row 14 — Column names: Sand1, 20MM, Sand2, 12MM... */}
-          <tr>
+          {/* Row 14 — Column names (height 21 pt from Excel) */}
+          <tr style={{ height: "21pt" }}>
             {cols.map(c => (
-              <th key={c.key} style={{ ...thc, width: c.w + "px" }}>{c.hdr}</th>
+              <th key={c.key} style={{ ...thc, width: c.w }}>{c.hdr}</th>
             ))}
           </tr>
-          {/* Row 15 — Recipe targets per 1 m³ (Design Mix base values), bold */}
-          <tr>
+          {/* Row 15 — Recipe targets per 1 m³ (height 21 pt) */}
+          <tr style={{ height: "21pt" }}>
             {recPerM3.map((v, i) => (
-              <td key={i} style={{ ...rtr, width: cols[i].w + "px" }}>
+              <td key={i} style={{ ...rtr, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
@@ -266,8 +271,8 @@ function M125Print({ d, rows, onActualChange }) {
         </thead>
 
         <tbody>
-          {/* Row 16 — Mass of Recipe Targets in Kgs. (right-aligned label + value) */}
-          <tr>
+          {/* Row 16 — Mass of Recipe Targets in Kgs. (height 21 pt) */}
+          <tr style={{ height: "21pt" }}>
             <td colSpan={NCOLS - 1}
               style={{ ...tc, textAlign: "right", fontSize: "6.5px",
                 border: "none", paddingRight: "3px", fontStyle: "italic" }}>
@@ -276,17 +281,17 @@ function M125Print({ d, rows, onActualChange }) {
             <td style={{ ...tc, fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</td>
           </tr>
 
-          {/* Row 17 — Per-batch target (recipe × batch size), shown ONCE before detail rows */}
-          <tr>
+          {/* Row 17 — Per-batch target (height 17.25 pt from Excel) */}
+          <tr style={{ height: "17.25pt" }}>
             {batchTgt.map((v, i) => (
-              <td key={i} style={{ ...tc, width: cols[i].w + "px" }}>
+              <td key={i} style={{ ...tc, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
           </tr>
 
-          {/* Row 18 — Label band */}
-          <tr>
+          {/* Row 18 — Label band (height 21 pt) */}
+          <tr style={{ height: "21pt" }}>
             <td colSpan={NCOLS} style={lbl}>
               Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
             </td>
@@ -295,24 +300,24 @@ function M125Print({ d, rows, onActualChange }) {
           {/* ── Rows 19–63: Per-batch groups (5 rows each) ───────────────── */}
           {rows.map((row, bIdx) => [
 
-            /* Row 1 of 5 — Target (Design Mix × Batch Size) */
-            <tr key={`t${bIdx}`}>
+            /* Row 1 of 5 — Target (height 21.75 pt) */
+            <tr key={`t${bIdx}`} style={{ height: "21.75pt" }}>
               {cols.map((c, i) => (
-                <td key={c.key} style={{ ...tc, width: c.w + "px" }}>
+                <td key={c.key} style={{ ...tc, width: c.w }}>
                   {batchTgt[i] === 0 ? "0.00"
                     : c.dec ? batchTgt[i].toFixed(c.dec) : batchTgt[i].toFixed(2)}
                 </td>
               ))}
             </tr>,
 
-            /* Row 2 of 5 — Actual (editable machine output) */
-            <tr key={`a${bIdx}`}>
+            /* Row 2 of 5 — Actual (height 21.75 pt) */
+            <tr key={`a${bIdx}`} style={{ height: "21.75pt" }}>
               {cols.map((c, i) => {
                 const act   = parseFloat(row[c.key + "_actual"] || 0);
                 const tgt   = batchTgt[i];
                 const offBy = tgt > 0 ? Math.abs(act - tgt) / tgt : 0;
                 return (
-                  <td key={c.key} style={{ ...tc, width: c.w + "px",
+                  <td key={c.key} style={{ ...tc, width: c.w,
                     color: offBy > 0.05 ? "red" : "black", padding: "0 1px" }}>
                     <input
                       className="no-print"
@@ -330,13 +335,13 @@ function M125Print({ d, rows, onActualChange }) {
               })}
             </tr>,
 
-            /* Row 3 of 5 — Correction (actual − target) */
-            <tr key={`c${bIdx}`}>
+            /* Row 3 of 5 — Correction (height 21.75 pt) */
+            <tr key={`c${bIdx}`} style={{ height: "21.75pt" }}>
               {cols.map((c, i) => {
                 const act  = parseFloat(row[c.key + "_actual"] || 0);
                 const diff = act - batchTgt[i];
                 return (
-                  <td key={c.key} style={{ ...tc, width: c.w + "px",
+                  <td key={c.key} style={{ ...tc, width: c.w,
                     color: "#555", fontSize: "6.5px" }}>
                     {diff === 0 ? "0.00" : diff.toFixed(2)}
                   </td>
@@ -344,20 +349,20 @@ function M125Print({ d, rows, onActualChange }) {
               })}
             </tr>,
 
-            /* Row 4 of 5 — Blank zeros row */
-            <tr key={`z${bIdx}`}>
+            /* Row 4 of 5 — Blank zeros (height 21.75 pt) */
+            <tr key={`z${bIdx}`} style={{ height: "21.75pt" }}>
               {cols.map((c, i) => (
-                <td key={c.key} style={{ ...tc, width: c.w + "px",
+                <td key={c.key} style={{ ...tc, width: c.w,
                   color: "#aaa", fontSize: "6.5px" }}>
                   {c.dec ? "0.00" : "0"}
                 </td>
               ))}
             </tr>,
 
-            /* Row 5 of 5 — Empty separator row */
-            <tr key={`e${bIdx}`} style={{ height: "4px" }}>
+            /* Row 5 of 5 — Empty separator (height 4.5 pt from Excel) */
+            <tr key={`e${bIdx}`} style={{ height: "4.5pt" }}>
               {cols.map((c, i) => (
-                <td key={c.key} style={{ ...tc, width: c.w + "px", padding: "0" }} />
+                <td key={c.key} style={{ ...tc, width: c.w, padding: "0" }} />
               ))}
             </tr>,
           ])}
@@ -369,7 +374,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 65 — Total Set Weight values */}
           <tr>
             {cols.map((c, i) => (
-              <td key={c.key} style={{ ...tc, width: c.w + "px", fontWeight: "bold" }}>
+              <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {setTotals[i] === 0 ? "0" : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
               </td>
             ))}
@@ -389,7 +394,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 68 — Total Actual Weight values */}
           <tr>
             {cols.map((c, i) => (
-              <td key={c.key} style={{ ...tc, width: c.w + "px", fontWeight: "bold" }}>
+              <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {actTotals[i] === 0 ? "0" : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
               </td>
             ))}
@@ -411,7 +416,7 @@ function M125Print({ d, rows, onActualChange }) {
             {cols.map((c, i) => {
               const pct = parseFloat(diffPctVal(setTotals[i], actTotals[i]));
               return (
-                <td key={c.key} style={{ ...tc, width: c.w + "px" }}>
+                <td key={c.key} style={{ ...tc, width: c.w }}>
                   {pct === 0 ? "0" : pct.toFixed(2)}
                 </td>
               );
@@ -558,10 +563,10 @@ function CP30Print({ d, rows, onActualChange }) {
       <table style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>{cats.map((g,i) => <th key={i} colSpan={g.span} style={CAT}>{g.cat}</th>)}</tr>
-          <tr>{cols.map(c => <th key={c.key} style={{ ...TH, width: c.w + "px" }}>{c.hdr}</th>)}</tr>
+          <tr>{cols.map(c => <th key={c.key} style={{ ...TH, width: c.w }}>{c.hdr}</th>)}</tr>
           <tr>
             {cols.map((c, i) => (
-              <td key={c.key} style={{ ...TD, width: c.w + "px" }}>
+              <td key={c.key} style={{ ...TD, width: c.w }}>
                 {c.isMoi ? "in %" : batchTgt[i] === 0 ? "0" : c.dec ? batchTgt[i].toFixed(c.dec) : batchTgt[i]}
               </td>
             ))}
@@ -578,7 +583,7 @@ function CP30Print({ d, rows, onActualChange }) {
               {cols.map(c => {
                 const act = parseFloat(row[c.key + "_actual"] || 0);
                 return (
-                  <td key={c.key} style={{ ...TD, width: c.w + "px", padding: "0 1px" }}>
+                  <td key={c.key} style={{ ...TD, width: c.w, padding: "0 1px" }}>
                     <input
                       className="no-print"
                       type="number" step="0.001"
@@ -603,7 +608,7 @@ function CP30Print({ d, rows, onActualChange }) {
           </tr>
           <tr style={{ fontWeight: "bold" }}>
             {setTotals.map((v, i) => (
-              <td key={i} style={{ ...TD, width: cols[i].w + "px", fontWeight: "bold" }}>
+              <td key={i} style={{ ...TD, width: cols[i].w, fontWeight: "bold" }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : Math.round(v)}
               </td>
             ))}
@@ -616,7 +621,7 @@ function CP30Print({ d, rows, onActualChange }) {
           </tr>
           <tr style={{ fontWeight: "bold" }}>
             {actTotals.map((v, i) => (
-              <td key={i} style={{ ...TD, width: cols[i].w + "px", fontWeight: "bold" }}>
+              <td key={i} style={{ ...TD, width: cols[i].w, fontWeight: "bold" }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : Math.round(v)}
               </td>
             ))}
