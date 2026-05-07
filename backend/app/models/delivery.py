@@ -33,6 +33,7 @@ class Delivery(Base):
     empty_weight_kg = Column(Numeric(10, 2), nullable=True)
     net_weight_kg = Column(Numeric(10, 2), nullable=True)
 
+    generate_weighment = Column(Integer, nullable=False, default=1)  # 1=yes 0=no
     design_mix_id = Column(Integer, ForeignKey("design_mixes.id"), nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

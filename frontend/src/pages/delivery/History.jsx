@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Search, Printer, Eye } from "lucide-react";
+import { Search, Printer, FlaskConical, Scale, Download } from "lucide-react";
 import api from "../../api/axios";
 
 export default function History() {
@@ -108,12 +108,20 @@ export default function History() {
                   <td className="px-4 py-2 font-mono text-xs">{d.vehicle_number}</td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
-                      <button className="text-gray-400 hover:text-primary" title="View DC" onClick={() => navigate(`/delivery/${d.id}/challan`)}>
+                      <button className="text-gray-400 hover:text-primary" title="Print Delivery Challan"
+                        onClick={() => navigate(`/delivery/${d.id}/challan`)}>
                         <Printer size={14} />
                       </button>
                       {d.plant_type && d.plant_type !== "None" && (
-                        <button className="text-gray-400 hover:text-accent" title="Batch Report" onClick={() => navigate(`/delivery/${d.id}/batch-report`)}>
-                          <Eye size={14} />
+                        <button className="text-gray-400 hover:text-green-600" title="Print Batch Report"
+                          onClick={() => navigate(`/delivery/${d.id}/batch-report`)}>
+                          <FlaskConical size={14} />
+                        </button>
+                      )}
+                      {d.generate_weighment === 1 && (
+                        <button className="text-gray-400 hover:text-blue-600" title="Print Weighment Slip"
+                          onClick={() => navigate(`/delivery/${d.id}/weighment`)}>
+                          <Scale size={14} />
                         </button>
                       )}
                     </div>

@@ -14,6 +14,8 @@ import BatchReport from "./pages/print/BatchReport";
 import WeighmentSlip from "./pages/print/WeighmentSlip";
 import Reports from "./pages/reports/Reports";
 import Admin from "./pages/admin/Admin";
+import Materials from "./pages/admin/Materials";
+import Weighment from "./pages/weighment/Weighment";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -41,7 +43,9 @@ export default function App() {
             <Route path="/delivery/:id/batch-report" element={<PrivateRoute><BatchReport /></PrivateRoute>} />
             <Route path="/delivery/:id/weighment" element={<PrivateRoute><WeighmentSlip /></PrivateRoute>} />
             <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+            <Route path="/weighment" element={<PrivateRoute><Weighment /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+            <Route path="/admin/materials" element={<PrivateRoute><Materials /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

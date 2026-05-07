@@ -125,6 +125,7 @@ def create_delivery(body: DeliveryCreate, db: Session = Depends(get_db), current
         empty_weight_kg=empty_weight,
         net_weight_kg=net_weight,
         design_mix_id=design_mix_id,
+        generate_weighment=1 if body.generate_weighment else 0,
         created_by=current_user.id,
     )
     db.add(delivery)

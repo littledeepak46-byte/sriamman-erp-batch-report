@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, customers, vehicles, materials, design_mix, deliveries, reports, admin
+from app.routers import auth, customers, vehicles, materials, design_mix, deliveries, reports, admin, weighment
 
 app = FastAPI(
     title="Sri Amman RMC Batching ERP",
@@ -27,6 +27,7 @@ app.include_router(design_mix.router, prefix="/api")
 app.include_router(deliveries.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(weighment.router, prefix="/api")
 
 
 @app.get("/api/health")

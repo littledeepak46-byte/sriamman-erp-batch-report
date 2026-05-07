@@ -16,6 +16,7 @@ class DeliveryCreate(BaseModel):
     delivery_date: date
     delivery_time: time
     gross_weight_kg: Decimal | None = None
+    generate_weighment: bool = True
 
 
 class DeliveryOut(BaseModel):
@@ -46,6 +47,7 @@ class DeliveryOut(BaseModel):
     empty_weight_kg: Decimal | None
     net_weight_kg: Decimal | None
     design_mix_id: int | None
+    generate_weighment: int = 1
 
     class Config:
         from_attributes = True

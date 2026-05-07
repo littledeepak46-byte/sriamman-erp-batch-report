@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard, Users, Truck, FlaskConical,
   ClipboardList, History, LogOut, Menu, X,
-  BarChart2, ShieldCheck,
+  BarChart2, ShieldCheck, Scale, Layers,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -15,8 +15,11 @@ const NAV_ITEMS = [
   { to: "/master/customers", label: "Customers", icon: Users },
   { to: "/master/vehicles", label: "Vehicles & Drivers", icon: Truck },
   { to: "/master/design-mix", label: "Design Mix", icon: FlaskConical },
-  { divider: true, label: "REPORTS" },
+  { divider: true, label: "OPERATIONS" },
+  { to: "/weighment", label: "Weighment", icon: Scale },
+  { divider: true, label: "REPORTS & ADMIN" },
   { to: "/reports", label: "Reports", icon: BarChart2 },
+  { to: "/admin/materials", label: "Materials", icon: Layers, adminOnly: true },
   { to: "/admin", label: "Admin Panel", icon: ShieldCheck, adminOnly: true },
 ];
 

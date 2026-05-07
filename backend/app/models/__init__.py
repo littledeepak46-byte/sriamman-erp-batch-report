@@ -5,6 +5,7 @@ from app.models.material import MaterialType, MaterialGrade, PumpingType
 from app.models.design_mix import DesignMix
 from app.models.sequence import DCSequence, BatchSequence
 from app.models.delivery import Delivery, BatchReportActual
+from app.models.weighment import WeighmentRecord, WeighmentSequence, IngredientLabel
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "DesignMix",
     "DCSequence", "BatchSequence",
     "Delivery", "BatchReportActual",
+    "WeighmentRecord", "WeighmentSequence", "IngredientLabel",
 ]

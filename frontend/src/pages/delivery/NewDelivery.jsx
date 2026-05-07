@@ -56,6 +56,7 @@ export default function NewDelivery() {
   const [deliveryDate, setDeliveryDate] = useState(today);
   const [deliveryTime, setDeliveryTime] = useState(nowTime);
   const [grossWeight, setGrossWeight] = useState("");
+  const [generateWeighment, setGenerateWeighment] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [savedDelivery, setSavedDelivery] = useState(null);
@@ -133,6 +134,7 @@ export default function NewDelivery() {
         delivery_date: deliveryDate,
         delivery_time: deliveryTime + ":00",
         gross_weight_kg: grossWeight ? parseFloat(grossWeight) : null,
+        generate_weighment: generateWeighment,
       };
       const { data } = await api.post("/deliveries", payload);
       setSavedDelivery(data);
@@ -177,9 +179,11 @@ export default function NewDelivery() {
               <Printer size={16} /> Print Batch Report ({savedDelivery.plant_type})
             </button>
           )}
-          <button className="btn-secondary flex items-center justify-center gap-2" onClick={() => navigate(`/delivery/${savedDelivery.id}/weighment`)}>
-            <Printer size={16} /> Print Weighment Slip
-          </button>
+          {savedDelivery.generate_weighment === 1 && (
+            <button className="btn-secondary flex items-center justify-center gap-2" onClick={() => navigate(`/delivery/${savedDelivery.id}/weighment`)}>
+              <Printer size={16} /> Print Weighment Slip
+            </button>
+          )}
           <button className="btn-secondary flex items-center justify-center gap-2" onClick={() => { setSavedDelivery(null); setQuantity(""); setGrossWeight(""); }}>
             <RefreshCw size={16} /> New Delivery
           </button>
@@ -288,7 +292,15 @@ export default function NewDelivery() {
 
         {/* ── Section 4: Date, Time & Weight ───────────────────────────── */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-primary border-b pb-2">Date, Time & Weight</h2>
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="font-semibold text-primary">Date, Time & Weight</h2>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" className="w-4 h-4 accent-primary"
+                checked={generateWeighment}
+                onChange={e => setGenerateWeighment(e.target.checked)} />
+              <span className="text-sm text-gray-600">Generate Weighment Slip</span>
+            </label>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Date" required>
               <input className="input" type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} required />

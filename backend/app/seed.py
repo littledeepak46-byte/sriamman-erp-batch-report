@@ -10,7 +10,36 @@ from app.models.material import MaterialGrade, MaterialType, PumpingType
 from app.models.sequence import BatchSequence
 from app.models.user import User
 from app.models.vehicle import Driver, Vehicle
+from app.models.weighment import IngredientLabel, WeighmentSequence
 from app.services.auth import hash_password
+
+DEFAULT_INGREDIENTS = [
+    # key, label, group, sort_order
+    ("sand1",    "Sand 1",        "COMMON", 1),
+    ("sand2",    "Sand 2",        "COMMON", 2),
+    ("agg_20mm", "20 MM",         "COMMON", 3),
+    ("agg_12mm", "12 MM",         "COMMON", 4),
+    ("cem1",     "Cement 1",      "COMMON", 5),
+    ("cem2",     "Cement 2",      "COMMON", 6),
+    ("fly",      "Fly Ash",       "COMMON", 7),
+    ("wtr1",     "Water 1",       "COMMON", 8),
+    ("adx1",     "Admix 1",       "COMMON", 9),
+    ("adx2",     "Admix 2",       "COMMON", 10),
+    ("agg_6mm",  "6 MM",          "M125",   11),
+    ("agg6",     "Agg",           "M125",   12),
+    ("cem3",     "Cement 3",      "M125",   13),
+    ("cem4",     "Cement 4",      "M125",   14),
+    ("wtr2",     "Water 2",       "M125",   15),
+    ("wtr3",     "Water 3",       "M125",   16),
+    ("adx3",     "Admix 3",       "M125",   17),
+    ("adx4",     "Admix 4",       "M125",   18),
+    ("silica",   "Silica",        "M125",   19),
+    ("moisture", "Moisture",      "CP30",   20),
+    ("filler",   "Filler",        "CP30",   21),
+    ("col1",     "1",             "CP30",   22),
+    ("col2",     "2",             "CP30",   23),
+    ("col3",     "3",             "CP30",   24),
+]
 
 
 def seed():
@@ -51,6 +80,15 @@ def seed():
     for plant in ["M1.25", "CP30"]:
         if not db.query(BatchSequence).filter_by(plant_type=plant).first():
             db.add(BatchSequence(plant_type=plant, last_batch_number=0))
+
+    # Weighment sequence
+    if not db.query(WeighmentSequence).first():
+        db.add(WeighmentSequence(last_number=0))
+
+    # Ingredient labels
+    for key, label, group, order in DEFAULT_INGREDIENTS:
+        if not db.get(IngredientLabel, key):
+            db.add(IngredientLabel(key=key, label=label, group=group, sort_order=order))
 
     db.flush()
 
