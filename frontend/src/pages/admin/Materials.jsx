@@ -5,7 +5,7 @@ import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-const TABS = ["Material Types & Grades", "Pumping Types", "Ingredient Labels"];
+const TABS = ["Material Types & Grades", "Pumping Types", "Ingredient Labels", "Batch Tolerances"];
 
 export default function Materials() {
   const [tab, setTab] = useState("Material Types & Grades");
@@ -25,6 +25,7 @@ export default function Materials() {
       {tab === "Material Types & Grades" && <MaterialTypesTab />}
       {tab === "Pumping Types" && <PumpingTypesTab />}
       {tab === "Ingredient Labels" && <IngredientLabelsTab />}
+      {tab === "Batch Tolerances" && <BatchTolerancesTab />}
     </div>
   );
 }
@@ -304,6 +305,78 @@ function IngredientLabelsTab() {
         </div>
       ))}
       {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+// ── Batch Tolerances Tab ──────────────────────────────────────────────────────
+function BatchTolerancesTab() {
+  const qc = useQueryClient();
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["tolerances"],
+    queryFn: () => api.get("/admin/tolerances").then(r => r.data),
+  });
+  const [editing, setEditing] = useState({});
+  const [saving, setSaving] = useState({});
+
+  async function save(key) {
+    setSaving(s => ({ ...s, [key]: true }));
+    try {
+      await api.put(`/admin/tolerances/${key}`, { tolerance: parseFloat(editing[key]) });
+      qc.invalidateQueries(["tolerances"]);
+      setEditing(e => { const n = { ...e }; delete n[key]; return n; });
+    } finally {
+      setSaving(s => ({ ...s, [key]: false }));
+    }
+  }
+
+  if (isLoading) return <div className="p-4 text-gray-400">Loading…</div>;
+
+  return (
+    <div className="card">
+      <p className="text-sm text-gray-500 mb-3">
+        Tolerance used in <strong>RANDBETWEEN(target − tol, target + tol)</strong> formula for auto-generated actual weights in the Batch Report.
+      </p>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-gray-500">
+            <th className="pb-2 pr-4">Material</th>
+            <th className="pb-2 pr-4">Key</th>
+            <th className="pb-2 w-36">Tolerance (±&nbsp;kg)</th>
+            <th className="pb-2 w-20"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => {
+            const val = editing[row.key] !== undefined ? editing[row.key] : row.tolerance;
+            const changed = editing[row.key] !== undefined;
+            return (
+              <tr key={row.key} className="border-b hover:bg-gray-50">
+                <td className="py-2 pr-4 font-medium">{row.label}</td>
+                <td className="py-2 pr-4 font-mono text-xs text-gray-400">{row.key}</td>
+                <td className="py-2 pr-4">
+                  <input
+                    className="input w-full"
+                    type="number" min="0" step="0.1"
+                    value={val}
+                    onChange={e => setEditing(ed => ({ ...ed, [row.key]: e.target.value }))}
+                  />
+                </td>
+                <td className="py-2">
+                  {changed && (
+                    <button
+                      className="btn-primary text-xs px-3 py-1"
+                      disabled={saving[row.key]}
+                      onClick={() => save(row.key)}>
+                      {saving[row.key] ? "…" : "Save"}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

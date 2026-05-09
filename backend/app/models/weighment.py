@@ -39,6 +39,15 @@ class WeighmentSequence(Base):
     last_number = Column(Integer, nullable=False, default=0)
 
 
+class MaterialTolerance(Base):
+    """Editable tolerance bands used in RANDBETWEEN actual weight generation."""
+    __tablename__ = "material_tolerances"
+
+    key       = Column(String(20), primary_key=True)   # e.g. "sand1", "cem1"
+    label     = Column(String(50), nullable=False)     # display name
+    tolerance = Column(Numeric(8, 3), nullable=False, default=0)
+
+
 class IngredientLabel(Base):
     """Stores admin-customisable display labels for the 24 ingredient keys."""
     __tablename__ = "ingredient_labels"

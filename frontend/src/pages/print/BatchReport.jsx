@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Printer, ArrowLeft, Save } from "lucide-react";
 import api from "../../api/axios";
 import { usePrintData } from "../../hooks/usePrintData";
@@ -675,6 +676,16 @@ export default function BatchReport() {
   const { id }    = useParams();
   const navigate  = useNavigate();
   const { data, isLoading, error } = usePrintData();
+  const { data: tolData = [] } = useQuery({
+    queryKey: ["tolerances"],
+    queryFn: () => api.get("/admin/tolerances").then(r => r.data),
+    staleTime: 60000,
+  });
+  // Build tolerance lookup from API (falls back to hardcoded TOLERANCE if not loaded yet)
+  const TOL = tolData.length
+    ? Object.fromEntries(tolData.map(t => [t.key, parseFloat(t.tolerance)]))
+    : TOLERANCE;
+
   const printRef      = useRef();
   const randRowsRef   = useRef({ id: null, rows: null }); // cache random actuals per delivery
   const [saving,  setSaving]  = useState(false);
@@ -710,7 +721,7 @@ export default function BatchReport() {
         const tgt   = c.dec ? Math.round(perM3 * batchSize * 100) / 100 : Math.round(perM3 * batchSize);
         row[c.key + "_actual"] = saved
           ? parseFloat(saved[c.key + "_actual"] || 0)
-          : randBetween(tgt, TOLERANCE[c.key] ?? 0, c.dec || 0);
+          : randBetween(tgt, TOL[c.key] ?? 0, c.dec || 0);
       });
       return row;
     });

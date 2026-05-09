@@ -1,9 +1,12 @@
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
+from app.models.weighment import MaterialTolerance
 from app.routers.auth import get_current_user, require_role
 from app.schemas.auth import UserCreate, UserOut
 from app.services.auth import hash_password
@@ -11,6 +14,39 @@ from app.services.auth import hash_password
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
+# ── Tolerance schemas ─────────────────────────────────────────────────────────
+class ToleranceOut(BaseModel):
+    key: str
+    label: str
+    tolerance: Decimal
+    class Config: from_attributes = True
+
+class ToleranceUpdate(BaseModel):
+    tolerance: Decimal
+
+
+@router.get("/tolerances", response_model=list[ToleranceOut])
+def list_tolerances(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    return db.query(MaterialTolerance).order_by(MaterialTolerance.key).all()
+
+
+@router.put("/tolerances/{key}", response_model=ToleranceOut)
+def update_tolerance(
+    key: str,
+    body: ToleranceUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+):
+    row = db.get(MaterialTolerance, key)
+    if not row:
+        raise HTTPException(404, "Tolerance key not found")
+    row.tolerance = body.tolerance
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+# ── User management ───────────────────────────────────────────────────────────
 class UserUpdate(BaseModel):
     role: str
     is_active: bool
