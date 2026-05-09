@@ -89,6 +89,13 @@ export default function NewDelivery() {
   useEffect(() => { setSiteId(""); }, [customerId]);
   // Auto-clear pumping if not concrete
   useEffect(() => { if (!isConcreteSelected) setPumpingTypeId(""); }, [isConcreteSelected]);
+  // Default pumping type to "Manual" when list loads
+  useEffect(() => {
+    if (pumpingTypes.length && !pumpingTypeId) {
+      const manual = pumpingTypes.find(p => p.name.toLowerCase() === "manual");
+      if (manual) setPumpingTypeId(String(manual.id));
+    }
+  }, [pumpingTypes]);
 
   // Cumulative qty — live query
   const canCalcCumulative = customerId && siteId && gradeId && deliveryDate && quantity > 0;
