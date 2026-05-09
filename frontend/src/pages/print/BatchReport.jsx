@@ -258,14 +258,11 @@ function M125Print({ d, rows, onActualChange }) {
       {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
-          {/* Row 13 — Category header — no top/left/right outer borders */}
+          {/* Row 13 — Category header — no borders at all */}
           <tr style={{ height: "11pt" }}>
             {cats.map((g, i) => (
               <th key={i} colSpan={g.span} style={{
-                ...chc,
-                borderTop: "none",
-                borderLeft: i === 0 ? "none" : INNER,
-                borderRight: i === cats.length - 1 ? "none" : INNER,
+                ...chc, border: "none",
               }}>{g.cat}</th>
             ))}
           </tr>
