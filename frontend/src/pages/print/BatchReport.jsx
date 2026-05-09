@@ -351,7 +351,7 @@ function M125Print({ d, rows, onActualChange }) {
                This is machine moisture data we don't track — never calculated. */
             <tr key={`c${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c) => (
-                <td key={c.key} style={{ ...tc, width: c.w, color: "#555", fontSize: "8pt" }}>
+                <td key={c.key} style={{ ...tc, width: c.w, color: "#555" }}>
                   {AGG_KEYS.has(c.key) || c.dec ? "0.00" : "0"}
                 </td>
               ))}
@@ -361,7 +361,7 @@ function M125Print({ d, rows, onActualChange }) {
                Only first 6 aggregate cols show "0.00" — rest are EMPTY  */
             <tr key={`z${bIdx}`} style={{ height: "12pt" }}>
               {cols.map((c, i) => (
-                <td key={c.key} style={{ ...tc, width: c.w, color: "#aaa", fontSize: "8pt" }}>
+                <td key={c.key} style={{ ...tc, width: c.w, color: "#aaa" }}>
                   {AGG_KEYS.has(c.key) ? "0.00" : ""}
                 </td>
               ))}
