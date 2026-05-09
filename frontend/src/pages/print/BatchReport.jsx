@@ -200,7 +200,7 @@ function M125Print({ d, rows, onActualChange }) {
 
   return (
     <div style={{ fontFamily: F, fontSize: fs, backgroundColor: "#fff",
-      padding: "4mm 8mm", boxSizing: "border-box" }}>
+      padding: "4mm 15mm", boxSizing: "border-box" }}>
 
       {/* ══ HEADER — Logo (top-left) + Company name (center) ════════════════ */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "3px" }}>
@@ -500,7 +500,7 @@ function CP30Print({ d, rows, onActualChange }) {
   const actTotals = cols.map(c => rows.reduce((s, r) => s + (parseFloat(r[c.key + "_actual"] || 0)), 0));
 
   return (
-    <div style={{ fontFamily: FONT, fontSize: "8px", backgroundColor: "#fff", padding: "5mm" }}>
+    <div style={{ fontFamily: FONT, fontSize: "8px", backgroundColor: "#fff", padding: "4mm 15mm" }}>
 
       {/* Header */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "4px" }}>
