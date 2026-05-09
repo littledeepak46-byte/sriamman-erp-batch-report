@@ -81,7 +81,7 @@ def create_weighment(
         if not db.get(Delivery, body.delivery_id):
             raise HTTPException(404, "Delivery not found")
 
-    net = body.gross_weight_kg - body.tare_weight_kg
+    net = (body.gross_weight_kg - body.tare_weight_kg) if body.gross_weight_kg is not None else None
     ticket = _next_ticket(db, body.weigh_date)
 
     rec = WeighmentRecord(

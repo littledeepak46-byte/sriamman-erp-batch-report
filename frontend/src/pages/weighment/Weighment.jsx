@@ -59,7 +59,7 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
       driver_name:          driverName || null,
       material_description: fd.material_description || null,
       supplier:             fd.supplier || null,
-      gross_weight_kg:      parseFloat(grossWt),
+      gross_weight_kg:      grossWt ? parseFloat(grossWt) : null,
       tare_weight_kg:       parseFloat(tare),
       weigh_date:           fd.weigh_date,
       weigh_time:           fd.weigh_time + ":00",
@@ -139,15 +139,14 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
       {/* Gross + Tare + Net (live calc) */}
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="label">Loaded Weight (kg) *</label>
+          <label className="label">Loaded Weight (kg)</label>
           <input
             className="input"
             type="number" step="0.01" min="1"
             name="gross_weight_kg"
-            placeholder="Gross weight"
+            placeholder="Leave blank for empty-weight-only"
             value={grossWt}
             onChange={e => setGrossWt(e.target.value)}
-            required
           />
         </div>
         <div>

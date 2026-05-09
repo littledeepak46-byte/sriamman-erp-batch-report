@@ -19,9 +19,9 @@ class WeighmentRecord(Base):
     material_description = Column(String(200), nullable=True)
     supplier = Column(String(200), nullable=True)   # inward only
 
-    gross_weight_kg = Column(Numeric(10, 2), nullable=False)
+    gross_weight_kg = Column(Numeric(10, 2), nullable=True)   # null = empty-weight-only entry
     tare_weight_kg = Column(Numeric(10, 2), nullable=False)
-    net_weight_kg = Column(Numeric(10, 2), nullable=False)
+    net_weight_kg = Column(Numeric(10, 2), nullable=True)
 
     weigh_date = Column(Date, nullable=False)
     weigh_time = Column(Time, nullable=False)
