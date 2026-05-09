@@ -481,9 +481,9 @@ function IC({ label, value, bold }) {
       <div style={{ display: "flex", alignItems: "flex-start" }}>
         <span style={{ fontWeight: "bold", width: "120px", flexShrink: 0,
           whiteSpace: "nowrap", overflow: "hidden" }}>{label}</span>
-        <span style={{ flexShrink: 0, marginRight: "2px" }}>:</span>
+        <span style={{ flexShrink: 0, marginRight: "1px" }}>:</span>
         <span style={{ fontWeight: bold ? "bold" : "normal",
-          overflowWrap: "break-word", wordBreak: "break-all", paddingLeft: "4px" }}>{value ?? "—"}</span>
+          overflowWrap: "break-word", wordBreak: "break-all", paddingLeft: "1px" }}>{value ?? "—"}</span>
       </div>
     </td>
   );
