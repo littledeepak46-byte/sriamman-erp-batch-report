@@ -7,7 +7,7 @@ from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.material import (
     MaterialGradeCreate, MaterialGradeOut,
-    MaterialTypeCreate, MaterialTypeOut,
+    MaterialTypeCreate, MaterialTypeOut, MaterialTypeQuantityUpdate,
     PumpingTypeCreate, PumpingTypeOut,
 )
 
@@ -27,6 +27,20 @@ def create_material_type(body: MaterialTypeCreate, db: Session = Depends(get_db)
     db.add(mt)
     db.commit()
     db.refresh(mt)
+    return mt
+
+
+@router.put("/material-types/{mt_id}/quantity-unit", response_model=MaterialTypeOut)
+def update_material_quantity_unit(
+    mt_id: int, body: MaterialTypeQuantityUpdate,
+    db: Session = Depends(get_db), _: User = Depends(get_current_user),
+):
+    mt = db.get(MaterialType, mt_id)
+    if not mt:
+        raise HTTPException(404, "Material type not found")
+    mt.quantity_unit = body.quantity_unit.strip()
+    mt.quantity_step = body.quantity_step.strip()
+    db.commit(); db.refresh(mt)
     return mt
 
 

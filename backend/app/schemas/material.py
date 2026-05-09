@@ -14,10 +14,17 @@ class MaterialTypeOut(BaseModel):
     id: int
     name: str
     is_active: bool
+    quantity_unit: str = "m³"
+    quantity_step: str = "0.01"
     grades: list[MaterialGradeOut] = []
 
     class Config:
         from_attributes = True
+
+
+class MaterialTypeQuantityUpdate(BaseModel):
+    quantity_unit: str
+    quantity_step: str
 
 
 class MaterialGradeCreate(BaseModel):

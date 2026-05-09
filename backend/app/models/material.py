@@ -10,6 +10,8 @@ class MaterialType(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False)
     is_active = Column(Boolean, default=True)
+    quantity_unit = Column(String(20), nullable=False, default="m³", server_default="m³")
+    quantity_step = Column(String(10), nullable=False, default="0.01", server_default="0.01")
 
     grades = relationship("MaterialGrade", back_populates="material_type", cascade="all, delete-orphan")
     deliveries = relationship("Delivery", back_populates="material_type")

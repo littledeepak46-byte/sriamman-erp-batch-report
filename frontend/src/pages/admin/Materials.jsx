@@ -5,7 +5,7 @@ import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-const TABS = ["Material Types & Grades", "Pumping Types", "Ingredient Labels", "Batch Tolerances", "Time Settings"];
+const TABS = ["Material Types & Grades", "Quantity Units", "Pumping Types", "Ingredient Labels", "Batch Tolerances", "Time Settings"];
 
 export default function Materials() {
   const [tab, setTab] = useState("Material Types & Grades");
@@ -23,6 +23,7 @@ export default function Materials() {
         ))}
       </div>
       {tab === "Material Types & Grades" && <MaterialTypesTab />}
+      {tab === "Quantity Units" && <QuantityUnitsTab />}
       {tab === "Pumping Types" && <PumpingTypesTab />}
       {tab === "Ingredient Labels" && <IngredientLabelsTab />}
       {tab === "Batch Tolerances" && <BatchTolerancesTab />}
@@ -443,6 +444,85 @@ function TimeSettingsTab() {
                     <button className="btn-primary text-xs px-3 py-1"
                       disabled={saving[row.key]} onClick={() => save(row.key)}>
                       {saving[row.key] ? "…" : "Save"}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Quantity Units Tab ────────────────────────────────────────────────────────
+function QuantityUnitsTab() {
+  const qc = useQueryClient();
+  const { data: types = [] } = useQuery({
+    queryKey: ["material-types"],
+    queryFn: () => api.get("/material-types").then(r => r.data),
+  });
+  const [editing, setEditing] = useState({});
+  const [saving, setSaving] = useState({});
+
+  async function save(mt) {
+    setSaving(s => ({ ...s, [mt.id]: true }));
+    try {
+      const ed = editing[mt.id] || {};
+      await api.put(`/material-types/${mt.id}/quantity-unit`, {
+        quantity_unit: ed.unit !== undefined ? ed.unit : mt.quantity_unit,
+        quantity_step: ed.step !== undefined ? ed.step : mt.quantity_step,
+      });
+      qc.invalidateQueries(["material-types"]);
+      setEditing(e => { const n = { ...e }; delete n[mt.id]; return n; });
+    } finally { setSaving(s => ({ ...s, [mt.id]: false })); }
+  }
+
+  const COMMON_UNITS = ["m³", "ton", "nos", "kg", "litre", "MT", "number"];
+  const COMMON_STEPS = ["0.001", "0.01", "0.1", "1"];
+
+  return (
+    <div className="card">
+      <p className="text-sm text-gray-500 mb-3">
+        Set the quantity unit and input precision for each material type.
+      </p>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-gray-500">
+            <th className="pb-2 pr-4">Material Type</th>
+            <th className="pb-2 pr-4 w-44">Unit (e.g. m³, ton)</th>
+            <th className="pb-2 pr-4 w-36">Step / Precision</th>
+            <th className="pb-2 w-20"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {types.map(mt => {
+            const ed = editing[mt.id] || {};
+            const unit = ed.unit !== undefined ? ed.unit : (mt.quantity_unit || "m³");
+            const step = ed.step !== undefined ? ed.step : (mt.quantity_step || "0.01");
+            const changed = ed.unit !== undefined || ed.step !== undefined;
+            return (
+              <tr key={mt.id} className="border-b hover:bg-gray-50">
+                <td className="py-2 pr-4 font-medium">{mt.name}</td>
+                <td className="py-2 pr-4">
+                  <input className="input w-full" list={`units-${mt.id}`} value={unit}
+                    onChange={e => setEditing(p => ({ ...p, [mt.id]: { ...ed, unit: e.target.value } }))} />
+                  <datalist id={`units-${mt.id}`}>
+                    {COMMON_UNITS.map(u => <option key={u} value={u} />)}
+                  </datalist>
+                </td>
+                <td className="py-2 pr-4">
+                  <select className="input w-full" value={step}
+                    onChange={e => setEditing(p => ({ ...p, [mt.id]: { ...ed, step: e.target.value } }))}>
+                    {COMMON_STEPS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
+                <td className="py-2">
+                  {changed && (
+                    <button className="btn-primary text-xs px-3 py-1"
+                      disabled={saving[mt.id]} onClick={() => save(mt)}>
+                      {saving[mt.id] ? "…" : "Save"}
                     </button>
                   )}
                 </td>

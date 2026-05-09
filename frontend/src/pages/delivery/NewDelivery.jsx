@@ -83,13 +83,12 @@ export default function NewDelivery() {
   const grades = selectedMaterial?.grades?.filter(g => g.is_active) ?? [];
   const isConcreteSelected = selectedMaterial?.name === CONCRETE_NAME;
 
-  // Quantity unit & step based on material type
-  const QTY_CONFIG = {
-    Concrete: { unit: "m³",  step: "0.01",  min: "0.01" },
-    Bitumen:  { unit: "ton", step: "0.001", min: "0.001" },
-    Precast:  { unit: "nos", step: "1",     min: "1" },
+  // Quantity unit & step — read from material type record (editable in Materials Management)
+  const qtyConf = {
+    unit: selectedMaterial?.quantity_unit || "m³",
+    step: selectedMaterial?.quantity_step || "0.01",
+    min:  selectedMaterial?.quantity_step || "0.01",
   };
-  const qtyConf = QTY_CONFIG[selectedMaterial?.name] ?? { unit: "m³", step: "0.01", min: "0.01" };
 
   // Auto-clear grade, plant type, order number when material changes
   useEffect(() => {
