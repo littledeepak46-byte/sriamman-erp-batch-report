@@ -126,6 +126,7 @@ def create_delivery(body: DeliveryCreate, db: Session = Depends(get_db), current
         net_weight_kg=net_weight,
         design_mix_id=design_mix_id,
         generate_weighment=1 if body.generate_weighment else 0,
+        order_number=body.order_number or 0,
         created_by=current_user.id,
     )
     db.add(delivery)
@@ -237,6 +238,7 @@ def get_print_data(delivery_id: int, db: Session = Depends(get_db), _: User = De
         id=d.id,
         dc_number=d.dc_number,
         batch_number=d.batch_number,
+        order_number=d.order_number or 0,
         customer_name=customer.name if customer else "",
         customer_gst=customer.gst_number if customer else None,
         billing_address=billing,

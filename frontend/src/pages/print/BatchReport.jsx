@@ -137,7 +137,7 @@ function IRR({ label, value, bold }) {
 // M1.25 Print Template — faithful to "other Batching Slip.xlsx"
 // Print area A1:U73 | White bg | Gray dotted borders | A4 Portrait
 // ═══════════════════════════════════════════════════════════════════════════
-function M125Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }) {
+function M125Print({ d, rows, onActualChange }) {
   const cols   = COLS_M125;
   const dm     = d.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(d.quantity_m3), "M1.25");
@@ -238,16 +238,7 @@ function M125Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }
             <IC label="Production Qty" value={prodQty.toFixed(2)} />
           </tr>
           <tr>
-            <td style={{ padding: "1pt 4pt", fontFamily: F, fontSize: "8pt",
-              verticalAlign: "top", width: "33%" }}>
-              <span style={{ fontWeight: "bold", display: "inline-block", minWidth: "80px" }}>Order Number</span>
-              <span> : </span>
-              <input className="no-print" type="number" min="0" value={orderNumber}
-                onChange={e => onOrderNumberChange(Number(e.target.value))}
-                style={{ width: "60px", border: "none", borderBottom: `1px dotted #aaa`,
-                  textAlign: "center", fontSize: "8pt", fontFamily: F, background: "transparent", outline: "none" }} />
-              <span className="print-only" style={{ display: "none" }}>{orderNumber}</span>
-            </td>
+            <IC label="Order Number"   value={d.order_number ?? 0} />
             <IC label="Truck Number"   value={d.vehicle_number} />
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
@@ -486,7 +477,7 @@ function IC({ label, value, bold }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // CP30 Print Template — matches MCI 70 N Docket format
 // ══════════════════════════════════════════════════════════════════════════════
-function CP30Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }) {
+function CP30Print({ d, rows, onActualChange }) {
   const cols = COLS_CP30;
   const dm   = d.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(d.quantity_m3), "CP30");
@@ -566,16 +557,7 @@ function CP30Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }
             ["Recipe Name",                  d.grade_name,           "Mixer Capacity",      `${MAX_BATCH["CP30"]} M³`],
             ["Truck Number",                 d.vehicle_number,       "Batch Size",          <b>{batchSize} M³</b>],
             ["Truck Driver",                 d.driver_name,          "", ""],
-            ["Order Number",
-              <span key="on">
-                <input className="no-print" type="number" min="0" value={orderNumber}
-                  onChange={e => onOrderNumberChange(Number(e.target.value))}
-                  style={{ width:"50px", border:"none", borderBottom:"1px dotted #aaa",
-                    textAlign:"center", fontSize:"8px", fontFamily:FONT,
-                    background:"transparent", outline:"none" }} />
-                <span className="print-only" style={{ display:"none" }}>{orderNumber}</span>
-              </span>,
-              "", ""],
+            ["Order Number",                 d.order_number ?? 0,    "", ""],
             ["Batcher Name",                 "Stetter",              "", ""],
           ].map(([l1,v1,l2,v2], i) => (
             <tr key={i}>
@@ -669,10 +651,9 @@ export default function BatchReport() {
   const navigate  = useNavigate();
   const { data, isLoading, error } = usePrintData();
   const printRef  = useRef();
-  const [saving,     setSaving]     = useState(false);
-  const [saved,      setSaved]      = useState(false);
-  const [actuals,    setActuals]    = useState(null);
-  const [orderNumber, setOrderNumber] = useState(0);
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [actuals, setActuals] = useState(null);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -765,10 +746,8 @@ export default function BatchReport() {
             boxShadow: "0 2px 16px rgba(0,0,0,0.25)",
           }}>
           {data.plant_type === "M1.25"
-            ? <M125Print d={data} rows={rows} onActualChange={handleActualChange}
-                orderNumber={orderNumber} onOrderNumberChange={setOrderNumber} />
-            : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange}
-                orderNumber={orderNumber} onOrderNumberChange={setOrderNumber} />
+            ? <M125Print d={data} rows={rows} onActualChange={handleActualChange} />
+            : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange} />
           }
         </div>
       </div>

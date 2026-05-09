@@ -17,12 +17,14 @@ class DeliveryCreate(BaseModel):
     delivery_time: time
     gross_weight_kg: Decimal | None = None
     generate_weighment: bool = True
+    order_number: int = 0
 
 
 class DeliveryOut(BaseModel):
     id: int
     dc_number: str
     batch_number: int | None
+    order_number: int = 0
     customer_id: int
     customer_name: str | None = None
     site_id: int
