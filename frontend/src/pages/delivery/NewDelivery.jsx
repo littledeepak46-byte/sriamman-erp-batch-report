@@ -249,15 +249,7 @@ export default function NewDelivery() {
 
         {/* ── Section 2: Date & Time ───────────────────────────────────── */}
         <div className="card space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
-            <h2 className="font-semibold text-primary">Date & Time</h2>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" className="w-4 h-4 accent-primary"
-                checked={generateWeighment}
-                onChange={e => setGenerateWeighment(e.target.checked)} />
-              <span className="text-sm text-gray-600">Generate Weighment Slip</span>
-            </label>
-          </div>
+          <h2 className="font-semibold text-primary border-b pb-2">Date & Time</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Date" required>
               <input className="input" type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} required />
@@ -362,7 +354,15 @@ export default function NewDelivery() {
 
         {/* ── Section 5: Weight ────────────────────────────────────────── */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-primary border-b pb-2">Weight</h2>
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="font-semibold text-primary">Weight</h2>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" className="w-4 h-4 accent-primary"
+                checked={generateWeighment}
+                onChange={e => setGenerateWeighment(e.target.checked)} />
+              <span className="text-sm text-gray-600">Generate Weighment Slip</span>
+            </label>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Gross Weight (kg)">
               <input className="input" type="number" step="0.01" min="0" value={grossWeight}
