@@ -24,9 +24,9 @@ const SIL = "6.87%";   // Silica column width  (54.75 pt in Excel)
 
 const COLS_M125 = [
   // Aggregate (6)
-  { key: "sand1",    hdr: "MSAN\nD",    cat: "Aggregate",  w: STD },
+  { key: "sand1",    hdr: "Sand1",      cat: "Aggregate",  w: STD },
   { key: "agg_20mm", hdr: "20MM",       cat: "Aggregate",  w: STD },
-  { key: "sand2",    hdr: "MSAN\nD",    cat: "Aggregate",  w: STD },
+  { key: "sand2",    hdr: "Sand2",      cat: "Aggregate",  w: STD },
   { key: "agg_12mm", hdr: "12MM",       cat: "Aggregate",  w: STD },
   { key: "agg_6mm",  hdr: "6MM",        cat: "Aggregate",  w: STD },
   { key: "agg6",     hdr: "Agg6",       cat: "Aggregate",  w: STD },
@@ -41,10 +41,10 @@ const COLS_M125 = [
   { key: "wtr2",     hdr: "Wtr2",       cat: "Water/Ice",  w: STD },
   { key: "wtr3",     hdr: "Wtr3",       cat: "Water/Ice",  w: STD },
   // Admixture (4)
-  { key: "adx1",     hdr: "Admix\n1",   cat: "Admixture",  w: STD, dec: 2 },
-  { key: "adx2",     hdr: "Admix\n2",   cat: "Admixture",  w: STD, dec: 2 },
-  { key: "adx3",     hdr: "Admix\n3",   cat: "Admixture",  w: STD, dec: 2 },
-  { key: "adx4",     hdr: "Admix\n4",   cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx1",     hdr: "Adx 1",      cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx2",     hdr: "Adx 2",      cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx3",     hdr: "Adx 3",      cat: "Admixture",  w: STD, dec: 2 },
+  { key: "adx4",     hdr: "Adx 4",      cat: "Admixture",  w: STD, dec: 2 },
   // Silica (1) — wider in Excel
   { key: "silica",   hdr: "Silica",     cat: "Silica",     w: SIL },
 ];
