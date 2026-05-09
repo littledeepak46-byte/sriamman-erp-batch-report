@@ -184,7 +184,7 @@ function M125Print({ d, rows, onActualChange }) {
   const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
   // Header cells — bold, centered
-  const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "nowrap" };
+  const thc = { ...tc, textAlign: "center", whiteSpace: "nowrap" };
   // Category row
   const chc = { ...thc };
   // Recipe per m³ row: bold
@@ -256,7 +256,7 @@ function M125Print({ d, rows, onActualChange }) {
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header — no borders at all */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             {cats.map((g, i) => (
               <th key={i} colSpan={g.span} style={{
                 ...chc, border: "none",
@@ -270,7 +270,7 @@ function M125Print({ d, rows, onActualChange }) {
             ))}
           </tr>
           {/* Row 15 — Recipe per m³ — compact */}
-          <tr style={{ height: "12pt" }}>
+          <tr style={{ height: "16pt" }}>
             {recPerM3.map((v, i) => (
               <td key={i} style={{ ...tc, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
@@ -281,7 +281,7 @@ function M125Print({ d, rows, onActualChange }) {
 
         <tbody>
           {/* Row 16 — Mass of Recipe Targets — label + value in one full-width cell */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS}
               style={{ ...tc, border: "none", fontSize: "8pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
@@ -292,7 +292,7 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
 
           {/* Row 17 — Per-batch target — compact */}
-          <tr style={{ height: "12pt" }}>
+          <tr style={{ height: "16pt" }}>
             {batchTgt.map((v, i) => (
               <td key={i} style={{ ...tc, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
@@ -301,7 +301,7 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
 
           {/* Row 18 — Label band — height = 2 data rows */}
-          <tr style={{ height: "24pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS} style={lbl}>
               Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
             </td>
@@ -311,7 +311,7 @@ function M125Print({ d, rows, onActualChange }) {
           {rows.map((row, bIdx) => [
 
             /* Row 1 of 5 — Target — compact, integers only */
-            <tr key={`t${bIdx}`} style={{ height: "12pt" }}>
+            <tr key={`t${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w }}>
                   {batchTgt[i] === 0 ? "0"
@@ -321,7 +321,7 @@ function M125Print({ d, rows, onActualChange }) {
             </tr>,
 
             /* Row 2 of 5 — Actual — compact, integers only */
-            <tr key={`a${bIdx}`} style={{ height: "12pt" }}>
+            <tr key={`a${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c, i) => {
                 const act   = parseFloat(row[c.key + "_actual"] || 0);
                 const tgt   = batchTgt[i];
@@ -347,7 +347,7 @@ function M125Print({ d, rows, onActualChange }) {
             /* Row 3 of 5 — Moisture correction row (PDF): always hardcoded.
                Aggregate + Admix cols → "0.00" | Cement/Water/Silica → "0"
                This is machine moisture data we don't track — never calculated. */
-            <tr key={`c${bIdx}`} style={{ height: "12pt" }}>
+            <tr key={`c${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c) => (
                 <td key={c.key} style={{ ...tc, width: c.w, color: "#555" }}>
                   {AGG_KEYS.has(c.key) || c.dec ? "0.00" : "0"}
@@ -357,7 +357,7 @@ function M125Print({ d, rows, onActualChange }) {
 
             /* Row 4 of 5 — Second correction row (from PDF):
                Only first 6 aggregate cols show "0.00" — rest are EMPTY  */
-            <tr key={`z${bIdx}`} style={{ height: "12pt" }}>
+            <tr key={`z${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w, color: "#aaa" }}>
                   {AGG_KEYS.has(c.key) ? "0.00" : ""}
@@ -366,7 +366,7 @@ function M125Print({ d, rows, onActualChange }) {
             </tr>,
 
             /* Row 5 of 5 — Empty separator — very thin */
-            <tr key={`e${bIdx}`} style={{ height: "3pt" }}>
+            <tr key={`e${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w, padding: "0" }} />
               ))}
@@ -376,9 +376,9 @@ function M125Print({ d, rows, onActualChange }) {
           {/* ══ TOTALS SECTION — rows 64–72 of Excel ═══════════════════════ */}
 
           {/* Row 64 — Total Set Weight label */}
-          <tr style={{ height: "11pt" }}><td colSpan={NCOLS} style={sec}>Total Set Weight in Kgs.</td></tr>
+          <tr style={{ height: "16pt" }}><td colSpan={NCOLS} style={sec}>Total Set Weight in Kgs.</td></tr>
           {/* Row 65 — Total Set Weight values — compact, integers */}
-          <tr style={{ height: "12pt" }}>
+          <tr style={{ height: "16pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {setTotals[i] === 0 ? "0" : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
@@ -386,7 +386,7 @@ function M125Print({ d, rows, onActualChange }) {
             ))}
           </tr>
           {/* Row 66 — Mass of Total Set Weight */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
                 <span style={{ fontStyle: "italic" }}>Mass of Total Set Weight in Kgs.</span>
@@ -396,11 +396,11 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
 
           {/* Row 67 — Total Actual Weight label */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS} style={sec}>Total Actual Weight in Kgs.</td>
           </tr>
           {/* Row 68 — Total Actual Weight values — integers */}
-          <tr style={{ height: "12pt" }}>
+          <tr style={{ height: "16pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
                 {actTotals[i] === 0 ? "0" : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
@@ -408,7 +408,7 @@ function M125Print({ d, rows, onActualChange }) {
             ))}
           </tr>
           {/* Row 69 — Mass of Total Actual Weight */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
                 <span style={{ fontStyle: "italic" }}>Mass of Total Actual Weight in Kgs.</span>
@@ -418,11 +418,11 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
 
           {/* Row 70 — Difference in Percentage label */}
-          <tr style={{ height: "11pt" }}>
+          <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS} style={{ ...sec, color: "black" }}>Difference in Percentage</td>
           </tr>
           {/* Row 72 — Percentage values — 2 decimals */}
-          <tr style={{ height: "12pt" }}>
+          <tr style={{ height: "16pt" }}>
             {cols.map((c, i) => {
               const pct = parseFloat(diffPctVal(setTotals[i], actTotals[i]));
               return (
