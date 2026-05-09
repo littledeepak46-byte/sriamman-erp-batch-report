@@ -184,7 +184,7 @@ function M125Print({ d, rows, onActualChange }) {
   const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
   // Header cells — bold, centered
-  const thc = { ...tc, textAlign: "center", whiteSpace: "nowrap" };
+  const thc = { ...tc, textAlign: "center", whiteSpace: "nowrap", fontWeight: "normal" };
   // Category row
   const chc = { ...thc };
   // Recipe per m³ row: bold
