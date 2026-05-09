@@ -14,13 +14,9 @@ function calcBatches(qty, plantType) {
   return { numBatches: n, batchSize: sz };
 }
 
-// ── M1.25 column definitions ─────────────────────────────────────────────────
-// Matches exactly: MSAN D, 20MM, MSAN D, 12MM, 6MM, Agg6 | Cem1-4, CEM5 | Wtr1-3 | Admix1-4 | Silica
-// Column widths come directly from Excel (other Batching Slip.xlsx):
-// Cols 2–19 = 41.25 pt each → 5.17% of total ingredient width
-// Col 20 (Silica) = 54.75 pt → 6.87%  (797.25 pt total = 18×41.25 + 54.75)
-const STD = "5.17%";   // standard column width (41.25 pt in Excel)
-const SIL = "6.87%";   // Silica column width  (54.75 pt in Excel)
+// ── M1.25 column definitions — all 19 columns equal width (100/19 ≈ 5.263%)
+const STD = "5.263%";
+const SIL = "5.263%";
 
 const COLS_M125 = [
   // Aggregate (6)
@@ -92,7 +88,7 @@ const GDOT = "1px dotted #aaa";
 const TD   = { border: GDOT, padding: "1px 2px", fontSize: "9pt", textAlign: "center",
                fontFamily: FONT, whiteSpace: "nowrap" };
 const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
-               whiteSpace: "pre-line" };
+               whiteSpace: "nowrap" };
 const CAT  = { ...TH, fontSize: "9pt", borderBottom: GDOT };
 
 // ── Schwing Stetter Logo — exact match to shared image ───────────────────────
@@ -188,7 +184,7 @@ function M125Print({ d, rows, onActualChange }) {
   const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
   // Header cells — bold, centered
-  const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "pre-line" };
+  const thc = { ...tc, textAlign: "center", fontWeight: "bold", whiteSpace: "nowrap" };
   // Category row
   const chc = { ...thc };
   // Recipe per m³ row: bold
