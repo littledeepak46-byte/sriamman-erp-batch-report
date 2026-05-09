@@ -469,7 +469,7 @@ function M125Print({ d, rows, onActualChange }) {
 // ── IC: Info cell helper — fixed-width label so colons align in a straight line
 function IC({ label, value, bold }) {
   return (
-    <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "8pt",
+    <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "10pt",
       verticalAlign: "top", width: "33%" }}>
       <span style={{ fontWeight: "bold", display: "inline-block", minWidth: "80px" }}>{label}</span>
       <span> : </span>
