@@ -4,16 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Printer, ArrowLeft } from "lucide-react";
 import { usePrintData } from "../../hooks/usePrintData";
 
-// Schwing-Stetter logo — two diagonal parallelograms in green
+// Schwing-Stetter logo — actual image file
 function SchwingLogo({ size = 62 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 62 62" style={{ display: "block" }}>
-      <rect width="62" height="62" fill="white" />
-      {/* Left parallelogram — dark green */}
-      <polygon points="6,56 17,6 31,6 20,56" fill="#1a6e1a" />
-      {/* Right parallelogram — lighter green */}
-      <polygon points="26,56 37,6 52,6 41,56" fill="#2c9e2c" />
-    </svg>
+    <img src="/schwing-logo.jpg" alt="Schwing Stetter"
+      width={size} height={size}
+      style={{ display: "block", objectFit: "contain" }} />
   );
 }
 

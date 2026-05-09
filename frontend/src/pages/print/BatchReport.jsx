@@ -112,23 +112,12 @@ const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
                whiteSpace: "nowrap" };
 const CAT  = { ...TH, fontSize: "9pt", borderBottom: GDOT };
 
-// ── Schwing Stetter Logo — exact match to shared image ───────────────────────
-// White background + dark border | Light green (left/narrow) + Dark teal (right/wide)
-// Both stripes are diagonal "/" parallelograms from bottom-left to top-right
+// ── Schwing Stetter Logo — actual image file ─────────────────────────────────
 function Logo({ size = 56 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 60 60"
-      style={{ display: "block", overflow: "hidden" }}>
-      {/* White background */}
-      <rect width="60" height="60" fill="white" />
-      {/* Light green stripe — narrow, left/leading edge (#57BB2F bright grass green) */}
-      <polygon points="5,62 28,0 45,0 22,62" fill="#57BB2F" />
-      {/* Dark teal stripe — wide, right/trailing (#006B5B deep forest teal) */}
-      <polygon points="22,62 45,0 68,0 60,48" fill="#006B5B" />
-      {/* Dark border around the box */}
-      <rect x="1.5" y="1.5" width="57" height="57"
-        fill="none" stroke="#2d2d2d" strokeWidth="3" />
-    </svg>
+    <img src="/schwing-logo.jpg" alt="Schwing Stetter"
+      width={size} height={size}
+      style={{ display: "block", objectFit: "contain" }} />
   );
 }
 
