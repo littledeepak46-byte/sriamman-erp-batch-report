@@ -83,6 +83,14 @@ export default function NewDelivery() {
   const grades = selectedMaterial?.grades?.filter(g => g.is_active) ?? [];
   const isConcreteSelected = selectedMaterial?.name === CONCRETE_NAME;
 
+  // Quantity unit & step based on material type
+  const QTY_CONFIG = {
+    Concrete: { unit: "m³",  step: "0.01",  min: "0.01" },
+    Bitumen:  { unit: "ton", step: "0.001", min: "0.001" },
+    Precast:  { unit: "nos", step: "1",     min: "1" },
+  };
+  const qtyConf = QTY_CONFIG[selectedMaterial?.name] ?? { unit: "m³", step: "0.01", min: "0.01" };
+
   // Auto-clear grade when material changes
   useEffect(() => { setGradeId(""); }, [materialTypeId]);
   // Auto-clear site when customer changes
@@ -268,14 +276,14 @@ export default function NewDelivery() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Quantity (m³)" required>
-              <input className="input" type="number" step="0.01" min="0.01" value={quantity}
-                onChange={e => setQuantity(e.target.value)} required />
+            <Field label={`Quantity (${qtyConf.unit})`} required>
+              <input className="input" type="number" step={qtyConf.step} min={qtyConf.min}
+                value={quantity} onChange={e => setQuantity(e.target.value)} required />
             </Field>
             <div>
-              <label className="label">Cumulative Quantity (m³)</label>
+              <label className="label">Cumulative Quantity ({qtyConf.unit})</label>
               <div className="border border-gray-200 rounded px-3 py-2 bg-gray-50 text-sm text-blue-700 font-semibold min-h-[38px]">
-                {cumulativeFetching ? "Calculating…" : cumulativeData ? `${cumulativeData.cumulative_qty_m3} m³` : <span className="text-gray-300 font-normal">Fill customer, site, grade & qty</span>}
+                {cumulativeFetching ? "Calculating…" : cumulativeData ? `${cumulativeData.cumulative_qty_m3} ${qtyConf.unit}` : <span className="text-gray-300 font-normal">Fill customer, site, grade & qty</span>}
               </div>
             </div>
           </div>
