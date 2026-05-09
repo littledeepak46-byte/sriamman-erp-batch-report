@@ -258,10 +258,15 @@ function M125Print({ d, rows, onActualChange }) {
       {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
-          {/* Row 13 — Category header — compact (PDF ref: ~11pt) */}
+          {/* Row 13 — Category header — no top/left/right outer borders */}
           <tr style={{ height: "11pt" }}>
             {cats.map((g, i) => (
-              <th key={i} colSpan={g.span} style={chc}>{g.cat}</th>
+              <th key={i} colSpan={g.span} style={{
+                ...chc,
+                borderTop: "none",
+                borderLeft: i === 0 ? "none" : INNER,
+                borderRight: i === cats.length - 1 ? "none" : INNER,
+              }}>{g.cat}</th>
             ))}
           </tr>
           {/* Row 14 — Column names — slightly taller for 2-line headers */}
