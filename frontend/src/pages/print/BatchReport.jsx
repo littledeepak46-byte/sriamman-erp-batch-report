@@ -466,15 +466,18 @@ function M125Print({ d, rows, onActualChange }) {
   );
 }
 
-// ── IC: Info cell helper — fixed-width label so colons align in a straight line
+// ── IC: Info cell helper — flex layout, fixed label width = perfect colon alignment
 function IC({ label, value, bold }) {
   return (
     <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "10pt",
       verticalAlign: "top", width: "33%" }}>
-      <span style={{ fontWeight: "bold", display: "inline-block", minWidth: "80px" }}>{label}</span>
-      <span> : </span>
-      <span style={{ fontWeight: bold ? "bold" : "normal",
-        overflowWrap: "break-word", wordBreak: "break-all" }}>{value ?? "—"}</span>
+      <div style={{ display: "flex", alignItems: "flex-start" }}>
+        <span style={{ fontWeight: "bold", width: "120px", flexShrink: 0,
+          whiteSpace: "nowrap", overflow: "hidden" }}>{label}</span>
+        <span style={{ flexShrink: 0, marginRight: "2px" }}>:</span>
+        <span style={{ fontWeight: bold ? "bold" : "normal",
+          overflowWrap: "break-word", wordBreak: "break-all", paddingLeft: "4px" }}>{value ?? "—"}</span>
+      </div>
     </td>
   );
 }
