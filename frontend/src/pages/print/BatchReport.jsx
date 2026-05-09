@@ -220,7 +220,7 @@ function M125Print({ d, rows, onActualChange }) {
       {/* ══ INFO SECTION — rows 2,4,6,8,10,12 of Excel ═════════════════════ */}
       {/* 3 columns × 6 rows, white bg, bold labels, gray dotted borders     */}
       <table style={{ width: "100%", borderCollapse: "collapse",
-        marginBottom: "3px", borderLeft: INNER, borderRight: INNER, borderBottom: INNER }}>
+        marginBottom: "3px" }}>
         <tbody>
           <tr>
             <IC label="Batch Date"        value={dateStr} />
