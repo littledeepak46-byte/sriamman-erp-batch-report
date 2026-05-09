@@ -479,7 +479,7 @@ function IC({ label, value, bold }) {
     <td style={{ padding: "1pt 4pt", fontFamily: FONT, fontSize: "10pt",
       verticalAlign: "top", width: "33%" }}>
       <div style={{ display: "flex", alignItems: "flex-start" }}>
-        <span style={{ fontWeight: "bold", width: "80px", flexShrink: 0,
+        <span style={{ fontWeight: "bold", width: "90px", flexShrink: 0,
           whiteSpace: "nowrap", overflow: "hidden" }}>{label}</span>
         <span style={{ flexShrink: 0, marginRight: "1px" }}>:</span>
         <span style={{ fontWeight: bold ? "bold" : "normal",
