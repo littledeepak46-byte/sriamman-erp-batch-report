@@ -23,7 +23,7 @@ function toSlipData(rec) {
     vehicle_number:  rec.vehicle_number,
     driver_name:     rec.driver_name,
     material_name:   rec.material_description || "MATERIAL",
-    grade_name:      "",
+    grade_name:      rec.material_description || "",
     supplier:        rec.supplier || "SRI AMMAN",
     gross_weight_kg: rec.gross_weight_kg,
     empty_weight_kg: rec.tare_weight_kg,
@@ -39,6 +39,15 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
   const [driverName, setDriverName] = useState("");
   const [grossWt, setGrossWt] = useState("");
   const [tare, setTare]       = useState("");
+  const [matTypeId, setMatTypeId] = useState("");
+  const [gradeId, setGradeId]     = useState("");
+
+  const { data: materialTypes = [] } = useQuery({
+    queryKey: ["material-types"],
+    queryFn: () => api.get("/material-types").then(r => r.data),
+  });
+  const selectedMatType = materialTypes.find(m => m.id === parseInt(matTypeId));
+  const grades = selectedMatType?.grades?.filter(g => g.is_active) ?? [];
   // Net = Gross − Empty, always. Missing value treated as 0 (same as Excel formula).
   const netWt = (parseFloat(grossWt || 0) - parseFloat(tare || 0)).toFixed(2);
 
@@ -58,7 +67,9 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
       type,
       vehicle_number:       vehicleNo,
       driver_name:          driverName || null,
-      material_description: fd.material_description || null,
+      material_description: type === "OUTWARD"
+        ? [selectedMatType?.name, grades.find(g => g.id === parseInt(gradeId))?.grade_name].filter(Boolean).join(" ") || fd.material_description || null
+        : fd.material_description || null,
       supplier:             fd.supplier || null,
       gross_weight_kg:      grossWt ? parseFloat(grossWt) : null,
       tare_weight_kg:       parseFloat(tare),
@@ -101,29 +112,44 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
         </div>
       </div>
 
-      {/* Material + Supplier */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Material Description
-            {type === "INWARD" && <span className="text-red-500 ml-1">*</span>}
-          </label>
-          <input
-            className="input"
-            name="material_description"
-            placeholder={type === "INWARD" ? "e.g. 20MM Aggregate, River Sand" : "e.g. CONCRETE M25"}
-            required={type === "INWARD"}
-          />
+      {/* Material + Grade + Supplier */}
+      {type === "OUTWARD" ? (
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="label">Material Type *</label>
+            <select className="input" value={matTypeId}
+              onChange={e => { setMatTypeId(e.target.value); setGradeId(""); }} required>
+              <option value="">Select type…</option>
+              {materialTypes.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label">Grade *</label>
+            <select className="input" value={gradeId}
+              onChange={e => setGradeId(e.target.value)} required disabled={!matTypeId}>
+              <option value="">Select grade…</option>
+              {grades.map(g => <option key={g.id} value={g.id}>{g.grade_name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label">Supplier</label>
+            <input className="input" name="supplier" defaultValue="SRI AMMAN"
+              placeholder="Supplier name" />
+          </div>
         </div>
-        <div>
-          <label className="label">Supplier</label>
-          <input
-            className="input"
-            name="supplier"
-            defaultValue={type === "OUTWARD" ? "SRI AMMAN" : ""}
-            placeholder="Supplier / quarry name"
-          />
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Material Description *</label>
+            <input className="input" name="material_description"
+              placeholder="e.g. 20MM Aggregate, River Sand" required />
+          </div>
+          <div>
+            <label className="label">Supplier</label>
+            <input className="input" name="supplier" placeholder="Supplier / quarry name" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Date + Time */}
       <div className="grid grid-cols-2 gap-3">
