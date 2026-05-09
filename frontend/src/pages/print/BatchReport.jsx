@@ -366,8 +366,8 @@ function M125Print({ d, rows, onActualChange }) {
               ))}
             </tr>,
 
-            /* Row 5 of 5 — Empty separator — very thin */
-            <tr key={`e${bIdx}`} style={{ height: "16pt" }}>
+            /* Row 5 of 5 — Empty separator — 80% shorter than data rows */
+            <tr key={`e${bIdx}`} style={{ height: "3pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w, padding: "0" }} />
               ))}
