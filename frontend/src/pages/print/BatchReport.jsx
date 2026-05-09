@@ -273,7 +273,7 @@ function M125Print({ d, rows, onActualChange }) {
           <tr style={{ height: "16pt" }}>
             {recPerM3.map((v, i) => (
               <td key={i} style={{ ...tc, width: cols[i].w }}>
-                {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
+                {v === 0 ? (cols[i].dec ? "0.00" : "0") : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
           </tr>
@@ -295,7 +295,7 @@ function M125Print({ d, rows, onActualChange }) {
           <tr style={{ height: "16pt" }}>
             {batchTgt.map((v, i) => (
               <td key={i} style={{ ...tc, width: cols[i].w }}>
-                {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
+                {v === 0 ? (cols[i].dec ? "0.00" : "0") : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
           </tr>
@@ -314,7 +314,7 @@ function M125Print({ d, rows, onActualChange }) {
             <tr key={`t${bIdx}`} style={{ height: "16pt" }}>
               {cols.map((c, i) => (
                 <td key={c.key} style={{ ...tc, width: c.w }}>
-                  {batchTgt[i] === 0 ? "0"
+                  {batchTgt[i] === 0 ? (c.dec ? "0.00" : "0")
                     : c.dec ? batchTgt[i].toFixed(c.dec) : fv(batchTgt[i])}
                 </td>
               ))}
@@ -326,7 +326,7 @@ function M125Print({ d, rows, onActualChange }) {
                 const act   = parseFloat(row[c.key + "_actual"] || 0);
                 const tgt   = batchTgt[i];
                 const offBy = tgt > 0 ? Math.abs(act - tgt) / tgt : 0;
-                const disp  = act === 0 ? "0" : c.dec ? act.toFixed(c.dec) : fv(act);
+                const disp  = act === 0 ? (c.dec ? "0.00" : "0") : c.dec ? act.toFixed(c.dec) : fv(act);
                 return (
                   <td key={c.key} style={{ ...tc, width: c.w,
                     color: offBy > 0.05 ? "red" : "black", padding: "0 2pt" }}>
@@ -381,7 +381,7 @@ function M125Print({ d, rows, onActualChange }) {
           <tr style={{ height: "16pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
-                {setTotals[i] === 0 ? "0" : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
+                {setTotals[i] === 0 ? (c.dec ? "0.00" : "0") : c.dec ? setTotals[i].toFixed(c.dec) : fv(setTotals[i])}
               </td>
             ))}
           </tr>
@@ -403,7 +403,7 @@ function M125Print({ d, rows, onActualChange }) {
           <tr style={{ height: "16pt" }}>
             {cols.map((c, i) => (
               <td key={c.key} style={{ ...tc, width: c.w, fontWeight: "bold" }}>
-                {actTotals[i] === 0 ? "0" : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
+                {actTotals[i] === 0 ? (c.dec ? "0.00" : "0") : c.dec ? actTotals[i].toFixed(c.dec) : fv(actTotals[i])}
               </td>
             ))}
           </tr>
@@ -427,7 +427,7 @@ function M125Print({ d, rows, onActualChange }) {
               const pct = parseFloat(diffPctVal(setTotals[i], actTotals[i]));
               return (
                 <td key={c.key} style={{ ...tc, width: c.w }}>
-                  {pct === 0 ? "0" : pct.toFixed(2)}
+                  {pct === 0 ? (c.dec ? "0.00" : "0") : pct.toFixed(2)}
                 </td>
               );
             })}
