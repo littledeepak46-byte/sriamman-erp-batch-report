@@ -252,14 +252,9 @@ function M125Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
           <tr>
-            <IC label="DC Number"      value={d.dc_number || "—"} />
-            <IC label="Truck Driver"   value={d.driver_name} />
-            <IC label="With This Load" value={withLoad.toFixed(2)} />
-          </tr>
-          <tr>
             <IC label="Customer"       value={d.customer_name} />
             <IC label="Truck Driver"   value={d.driver_name} />
-            <IC label="Mixer Capacity" value={String(MAX_BATCH["M1.25"])} />
+            <IC label="With This Load" value={withLoad.toFixed(2)} />
           </tr>
           <tr>
             <IC label="Site"           value={d.site_location || d.site_name} />
@@ -571,7 +566,6 @@ function CP30Print({ d, rows, onActualChange, orderNumber, onOrderNumberChange }
             ["Recipe Name",                  d.grade_name,           "Mixer Capacity",      `${MAX_BATCH["CP30"]} M³`],
             ["Truck Number",                 d.vehicle_number,       "Batch Size",          <b>{batchSize} M³</b>],
             ["Truck Driver",                 d.driver_name,          "", ""],
-            ["DC Number",                    d.dc_number || "—",     "", ""],
             ["Order Number",
               <span key="on">
                 <input className="no-print" type="number" min="0" value={orderNumber}
