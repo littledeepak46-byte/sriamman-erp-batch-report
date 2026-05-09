@@ -454,7 +454,6 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
             <td style={{ width: "45%", fontFamily: F, fontSize: "7px", verticalAlign: "middle" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
                 <Logo size={16} />
-                <span style={{ fontWeight: "bold" }}>Schwing Stetter</span>
               </div>
               <div style={{ fontSize: "8pt", color: "#444" }}>
                 MCI 550 ver 1.0 Statistical Report
@@ -523,8 +522,6 @@ function CP30Print({ d, rows, onActualChange }) {
           <tr>
             <td style={{ width: "60px", verticalAlign: "top" }}>
               <Logo size={44} />
-              <div style={{ fontSize: "8pt", color: "#444" }}>SCHWING</div>
-              <div style={{ fontSize: "8pt", color: "#444" }}>Stetter</div>
             </td>
             <td style={{ textAlign: "center" }}>
               <div style={{ fontSize: "14px", fontWeight: "bold" }}>SRI AMMAN</div>
