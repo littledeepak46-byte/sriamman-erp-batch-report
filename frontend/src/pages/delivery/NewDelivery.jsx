@@ -247,17 +247,31 @@ export default function NewDelivery() {
           </div>
         </div>
 
-        {/* ── Section 2: Material ──────────────────────────────────────── */}
+        {/* ── Section 2: Date & Time ───────────────────────────────────── */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="font-semibold text-primary">Date & Time</h2>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" className="w-4 h-4 accent-primary"
+                checked={generateWeighment}
+                onChange={e => setGenerateWeighment(e.target.checked)} />
+              <span className="text-sm text-gray-600">Generate Weighment Slip</span>
+            </label>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Date" required>
+              <input className="input" type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} required />
+            </Field>
+            <Field label="Time" required>
+              <input className="input" type="time" value={deliveryTime} onChange={e => setDeliveryTime(e.target.value)} required />
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Section 3: Material & Plant ──────────────────────────────── */}
         <div className="card space-y-4">
           <h2 className="font-semibold text-primary border-b pb-2">Material & Plant</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {isConcreteSelected && (
-              <Field label="Plant Type" required>
-                <select className="input" value={plantType} onChange={e => setPlantType(e.target.value)} required>
-                  {PLANT_TYPES.map(p => <option key={p}>{p}</option>)}
-                </select>
-              </Field>
-            )}
             <Field label="Type of Material" required>
               <select className="input" value={materialTypeId} onChange={e => setMaterialTypeId(e.target.value)} required>
                 <option value="">Select…</option>
@@ -270,6 +284,13 @@ export default function NewDelivery() {
                 {grades.map(g => <option key={g.id} value={g.id}>{g.grade_name}</option>)}
               </select>
             </Field>
+            {isConcreteSelected && (
+              <Field label="Plant Type" required>
+                <select className="input" value={plantType} onChange={e => setPlantType(e.target.value)} required>
+                  {PLANT_TYPES.map(p => <option key={p}>{p}</option>)}
+                </select>
+              </Field>
+            )}
           </div>
 
           {/* Pumping type — only for Concrete */}
@@ -339,25 +360,9 @@ export default function NewDelivery() {
           </Field>
         </div>
 
-        {/* ── Section 4: Date, Time & Weight ───────────────────────────── */}
+        {/* ── Section 5: Weight ────────────────────────────────────────── */}
         <div className="card space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
-            <h2 className="font-semibold text-primary">Date, Time & Weight</h2>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" className="w-4 h-4 accent-primary"
-                checked={generateWeighment}
-                onChange={e => setGenerateWeighment(e.target.checked)} />
-              <span className="text-sm text-gray-600">Generate Weighment Slip</span>
-            </label>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Date" required>
-              <input className="input" type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} required />
-            </Field>
-            <Field label="Time" required>
-              <input className="input" type="time" value={deliveryTime} onChange={e => setDeliveryTime(e.target.value)} required />
-            </Field>
-          </div>
+          <h2 className="font-semibold text-primary border-b pb-2">Weight</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Gross Weight (kg)">
               <input className="input" type="number" step="0.01" min="0" value={grossWeight}
