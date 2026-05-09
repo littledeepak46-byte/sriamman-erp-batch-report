@@ -165,8 +165,8 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
         <div>
           <label className="label">Net Weight (kg)</label>
           <div className={`border rounded px-3 py-2 text-sm font-bold min-h-[38px]
-            ${netWt && parseFloat(netWt) > 0 ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400"}`}>
-            {netWt && parseFloat(netWt) > 0 ? `${parseFloat(netWt).toLocaleString()} kg` : "—"}
+            ${netWt !== "" ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400"}`}>
+            {netWt !== "" ? `${parseFloat(netWt).toLocaleString()} kg` : "—"}
           </div>
         </div>
       </div>
