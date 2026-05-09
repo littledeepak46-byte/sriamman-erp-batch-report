@@ -332,8 +332,9 @@ function M125Print({ d, rows, onActualChange }) {
                     color: offBy > 0.05 ? "red" : "black", padding: "0 2pt" }}>
                     <input
                       className="no-print"
-                      type="number" step="0.001"
-                      value={row[c.key + "_actual"] ?? 0}
+                      type={c.dec ? "text" : "number"}
+                      step={c.dec ? undefined : "0.001"}
+                      value={c.dec ? disp : (row[c.key + "_actual"] ?? 0)}
                       onChange={e => onActualChange(bIdx, c.key, e.target.value)}
                       style={{ width: "100%", border: "none", textAlign: "center",
                         fontSize: fs, padding: 0, background: "transparent", outline: "none" }}
