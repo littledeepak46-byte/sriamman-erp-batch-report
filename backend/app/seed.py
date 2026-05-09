@@ -10,7 +10,7 @@ from app.models.material import MaterialGrade, MaterialType, PumpingType
 from app.models.sequence import BatchSequence
 from app.models.user import User
 from app.models.vehicle import Driver, Vehicle
-from app.models.weighment import IngredientLabel, WeighmentSequence
+from app.models.weighment import IngredientLabel, MaterialTolerance, TimingSetting, WeighmentSequence
 from app.services.auth import hash_password
 
 DEFAULT_INGREDIENTS = [
@@ -81,9 +81,64 @@ def seed():
         if not db.query(BatchSequence).filter_by(plant_type=plant).first():
             db.add(BatchSequence(plant_type=plant, last_batch_number=0))
 
-    # Weighment sequence
-    if not db.query(WeighmentSequence).first():
-        db.add(WeighmentSequence(last_number=0))
+    # Weighment sequence — keyed by fiscal year; seed current year
+    from datetime import date
+    from app.services.dc_number import _financial_year
+    fy = _financial_year(date.today())
+    if not db.query(WeighmentSequence).filter_by(year_code=fy).first():
+        db.add(WeighmentSequence(year_code=fy, last_number=0))
+
+    # ── Material quantity units ────────────────────────────────────────────────
+    qty_units = {
+        "Concrete": ("m³",   "0.01"),
+        "Bitumen":  ("ton",  "0.001"),
+        "Precast":  ("nos",  "1"),
+        "Oil":      ("litre","1"),
+        "Emulsion": ("litre","1"),
+    }
+    for mat_name, (unit, step) in qty_units.items():
+        mt = db.query(MaterialType).filter_by(name=mat_name).first()
+        if mt and (not mt.quantity_unit or mt.quantity_unit == "m³" and mat_name != "Concrete"):
+            mt.quantity_unit = unit
+            mt.quantity_step = step
+
+    # ── Batch tolerances ──────────────────────────────────────────────────────
+    default_tolerances = [
+        ("sand1",    "Sand 1 (MSAND)",    25),
+        ("agg_20mm", "20MM Aggregate",    25),
+        ("sand2",    "Sand 2 (MSAND)",    25),
+        ("agg_12mm", "12MM Aggregate",    25),
+        ("agg_6mm",  "6MM Aggregate",     25),
+        ("agg6",     "Agg6",              25),
+        ("cem1",     "Cement 1",           4),
+        ("cem2",     "Cement 2",           4),
+        ("cem3",     "Cement 3",           4),
+        ("cem4",     "Cement 4",           4),
+        ("fly",      "Fly Ash (CEM5)",     4),
+        ("wtr1",     "Water 1",           10),
+        ("wtr2",     "Water 2",           10),
+        ("wtr3",     "Water 3",           10),
+        ("adx1",     "Admixture 1",      0.5),
+        ("adx2",     "Admixture 2",      0.5),
+        ("adx3",     "Admixture 3",      0.5),
+        ("adx4",     "Admixture 4",      0.5),
+        ("silica",   "Silica",             0),
+    ]
+    for key, label, tol in default_tolerances:
+        if not db.get(MaterialTolerance, key):
+            db.add(MaterialTolerance(key=key, label=label, tolerance=tol))
+
+    # ── Timing settings ───────────────────────────────────────────────────────
+    default_timing = [
+        ("batch_end_min",      "DC → Batch End offset minimum",  2,  "min"),
+        ("batch_end_max",      "DC → Batch End offset maximum",  4,  "min"),
+        ("batch_per_duration", "Duration per batch",             69, "sec"),
+        ("weighment_min",      "Batch End → Weighment minimum",  2,  "min"),
+        ("weighment_max",      "Batch End → Weighment maximum",  4,  "min"),
+    ]
+    for key, label, value, unit in default_timing:
+        if not db.get(TimingSetting, key):
+            db.add(TimingSetting(key=key, label=label, value=value, unit=unit))
 
     # Ingredient labels
     for key, label, group, order in DEFAULT_INGREDIENTS:
