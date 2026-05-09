@@ -284,14 +284,15 @@ function M125Print({ d, rows, onActualChange }) {
         </thead>
 
         <tbody>
-          {/* Row 16 — Mass of Recipe Targets — compact */}
+          {/* Row 16 — Mass of Recipe Targets — label + value in one full-width cell */}
           <tr style={{ height: "11pt" }}>
-            <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "8pt",
-                border: "none", paddingRight: "3px", fontStyle: "italic" }}>
-              Mass of Recipe Targets in Kgs.
+            <td colSpan={NCOLS}
+              style={{ ...tc, border: "none", fontSize: "8pt" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
+                <span style={{ fontStyle: "italic" }}>Mass of Recipe Targets in Kgs.</span>
+                <span style={{ fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</span>
+              </div>
             </td>
-            <td style={{ ...tc, fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</td>
           </tr>
 
           {/* Row 17 — Per-batch target — compact */}
@@ -390,12 +391,12 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
           {/* Row 66 — Mass of Total Set Weight */}
           <tr style={{ height: "11pt" }}>
-            <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "8pt",
-                border: "none", paddingRight: "3px", fontStyle: "italic" }}>
-              Mass of Total Set Weight in Kgs.
+            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
+                <span style={{ fontStyle: "italic" }}>Mass of Total Set Weight in Kgs.</span>
+                <span style={{ fontWeight: "bold" }}>{massSet.toFixed(2)}</span>
+              </div>
             </td>
-            <td style={{ ...tc, fontWeight: "bold" }}>{massSet.toFixed(2)}</td>
           </tr>
 
           {/* Row 67 — Total Actual Weight label */}
@@ -412,12 +413,12 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
           {/* Row 69 — Mass of Total Actual Weight */}
           <tr style={{ height: "11pt" }}>
-            <td colSpan={NCOLS - 1}
-              style={{ ...tc, textAlign: "right", fontSize: "8pt",
-                border: "none", paddingRight: "3px", fontStyle: "italic" }}>
-              Mass of Total Actual Weight in Kgs.
+            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
+                <span style={{ fontStyle: "italic" }}>Mass of Total Actual Weight in Kgs.</span>
+                <span style={{ fontWeight: "bold" }}>{massAct.toFixed(2)}</span>
+              </div>
             </td>
-            <td style={{ ...tc, fontWeight: "bold" }}>{massAct.toFixed(2)}</td>
           </tr>
 
           {/* Row 70 — Difference in Percentage label */}
