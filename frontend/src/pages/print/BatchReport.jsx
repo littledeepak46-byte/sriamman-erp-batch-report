@@ -275,7 +275,7 @@ function M125Print({ d, rows, onActualChange }) {
           {/* Row 15 — Recipe per m³ — compact */}
           <tr style={{ height: "12pt" }}>
             {recPerM3.map((v, i) => (
-              <td key={i} style={{ ...rtr, width: cols[i].w }}>
+              <td key={i} style={{ ...tc, width: cols[i].w }}>
                 {v === 0 ? "0" : cols[i].dec ? v.toFixed(cols[i].dec) : fv(v)}
               </td>
             ))}
