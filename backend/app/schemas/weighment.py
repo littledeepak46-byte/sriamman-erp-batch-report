@@ -16,11 +16,7 @@ class WeighmentCreate(BaseModel):
     weigh_time: time
     remarks: str | None = None
 
-    @model_validator(mode="after")
-    def check_net(self):
-        if self.gross_weight_kg is not None and self.gross_weight_kg <= self.tare_weight_kg:
-            raise ValueError("Gross weight must be greater than tare weight")
-        return self
+    # No validation — Net = Gross − Empty always, including negative values
 
 
 class WeighmentOut(BaseModel):

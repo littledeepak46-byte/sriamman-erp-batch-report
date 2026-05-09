@@ -39,7 +39,8 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
   const [driverName, setDriverName] = useState("");
   const [grossWt, setGrossWt] = useState("");
   const [tare, setTare]       = useState("");
-  const netWt = grossWt && tare ? (parseFloat(grossWt) - parseFloat(tare)).toFixed(2) : "";
+  // Net = Gross − Empty, always. Missing value treated as 0 (same as Excel formula).
+  const netWt = (parseFloat(grossWt || 0) - parseFloat(tare || 0)).toFixed(2);
 
   // Auto-fill driver from vehicle master when vehicle is selected
   function handleVehicleChange(val) {
@@ -165,8 +166,10 @@ function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
         <div>
           <label className="label">Net Weight (kg)</label>
           <div className={`border rounded px-3 py-2 text-sm font-bold min-h-[38px]
-            ${netWt !== "" ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400"}`}>
-            {netWt !== "" ? `${parseFloat(netWt).toLocaleString()} kg` : "—"}
+            ${parseFloat(netWt) < 0 ? "bg-red-50 border-red-300 text-red-600"
+              : parseFloat(netWt) > 0 ? "bg-green-50 border-green-300 text-green-700"
+              : "bg-gray-50 border-gray-200 text-gray-500"}`}>
+            {parseFloat(netWt).toLocaleString()} kg
           </div>
         </div>
       </div>
