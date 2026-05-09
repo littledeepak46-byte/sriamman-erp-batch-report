@@ -256,8 +256,7 @@ function M125Print({ d, rows, onActualChange }) {
         </tbody>
       </table>
 
-      {/* ══ MATERIAL TABLE — black outer border, gray dotted inner ══════════ */}
-      <div style={{ border: OUTER }}>
+      {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header — compact (PDF ref: ~11pt) */}
@@ -436,7 +435,6 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
         </tbody>
       </table>
-      </div>
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
