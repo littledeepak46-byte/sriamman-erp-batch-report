@@ -63,6 +63,26 @@ const COLS_CP30 = [
 
 const COLS = { "M1.25": COLS_M125, "CP30": COLS_CP30 };
 
+// ── Tolerance bands per material key (from PDF spec) ─────────────────────────
+const TOLERANCE = {
+  sand1:25, agg_20mm:25, sand2:25, agg_12mm:25, agg_6mm:25, agg6:25,
+  cem1:4,   cem2:4,      cem3:4,   cem4:4,      fly:4,
+  wtr1:10,  wtr2:10,     wtr3:10,
+  adx1:0.5, adx2:0.5,   adx3:0.5, adx4:0.5,
+  silica:0,
+  // CP30 extras
+  moisture:2, filler:4, col1:5,
+};
+
+// RANDBETWEEN — if target=0 stays 0; integer cols round to int, decimal cols to dec places
+function randBetween(tgt, tol, dec = 0) {
+  if (tgt === 0 || tol === 0) return tgt;
+  const raw = tgt - tol + Math.random() * 2 * tol;
+  return dec > 0
+    ? Math.round(raw * Math.pow(10, dec)) / Math.pow(10, dec)
+    : Math.round(raw);
+}
+
 // Build category group spans
 function catGroups(cols) {
   const g = [];
@@ -655,7 +675,8 @@ export default function BatchReport() {
   const { id }    = useParams();
   const navigate  = useNavigate();
   const { data, isLoading, error } = usePrintData();
-  const printRef  = useRef();
+  const printRef      = useRef();
+  const randRowsRef   = useRef({ id: null, rows: null }); // cache random actuals per delivery
   const [saving,  setSaving]  = useState(false);
   const [saved,   setSaved]   = useState(false);
   const [actuals, setActuals] = useState(null);
@@ -676,18 +697,25 @@ export default function BatchReport() {
 
   const getRows = () => {
     if (actuals) return actuals;
-    return Array.from({ length: numBatches }, (_, i) => {
+    // Return cached random rows for this delivery (don't re-randomize on every render)
+    if (randRowsRef.current.id === data.id && randRowsRef.current.rows) {
+      return randRowsRef.current.rows;
+    }
+    // Generate fresh RANDBETWEEN actuals for each batch
+    const generated = Array.from({ length: numBatches }, (_, i) => {
       const saved = (data.batch_actuals || []).find(r => r.batch_sequence === i + 1);
       const row   = { batch_sequence: i + 1, batch_size_m3: batchSize };
-      // For M1.25, default actual = batchTgt (per-batch target)
-      // For CP30, default actual = per-m³ target × batch size
       cols.forEach(c => {
-        const perM3  = parseFloat(dm?.[c.key] || 0);
-        const tgt    = c.dec ? Math.round(perM3 * batchSize * 100) / 100 : Math.round(perM3 * batchSize);
-        row[c.key + "_actual"] = saved ? parseFloat(saved[c.key + "_actual"] || 0) : tgt;
+        const perM3 = parseFloat(dm?.[c.key] || 0);
+        const tgt   = c.dec ? Math.round(perM3 * batchSize * 100) / 100 : Math.round(perM3 * batchSize);
+        row[c.key + "_actual"] = saved
+          ? parseFloat(saved[c.key + "_actual"] || 0)
+          : randBetween(tgt, TOLERANCE[c.key] ?? 0, c.dec || 0);
       });
       return row;
     });
+    randRowsRef.current = { id: data.id, rows: generated };
+    return generated;
   };
 
   const rows = getRows();
