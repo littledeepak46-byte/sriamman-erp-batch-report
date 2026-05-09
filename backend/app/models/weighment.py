@@ -35,6 +35,7 @@ class WeighmentSequence(Base):
     __tablename__ = "weighment_sequences"
 
     id = Column(Integer, primary_key=True)
+    year_code = Column(String(10), nullable=False, unique=True, index=True)
     last_number = Column(Integer, nullable=False, default=0)
 
 

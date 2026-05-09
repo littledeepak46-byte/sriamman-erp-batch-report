@@ -1,5 +1,7 @@
 from datetime import date
 
+from app.services.dc_number import _financial_year
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,20 +19,24 @@ from app.schemas.weighment import (
 router = APIRouter(tags=["weighment"])
 
 
-# ── Ticket number generator ────────────────────────────────────────────────────
+# ── Ticket number generator — resets every fiscal year (Apr–Mar) ──────────────
 
-def _next_ticket(db: Session) -> str:
+def _next_ticket(db: Session, weigh_date: date) -> str:
+    fy = _financial_year(weigh_date)
     seq = (
-        db.execute(select(WeighmentSequence).with_for_update())
-        .scalar_one_or_none()
+        db.execute(
+            select(WeighmentSequence)
+            .where(WeighmentSequence.year_code == fy)
+            .with_for_update()
+        ).scalar_one_or_none()
     )
     if seq is None:
-        seq = WeighmentSequence(last_number=0)
+        seq = WeighmentSequence(year_code=fy, last_number=0)
         db.add(seq)
         db.flush()
     seq.last_number += 1
     db.flush()
-    return f"WGH-{seq.last_number:05d}"
+    return f"SARMC/{fy}/WGH/{seq.last_number:04d}"
 
 
 # ── Weighment CRUD ─────────────────────────────────────────────────────────────
@@ -76,7 +82,7 @@ def create_weighment(
             raise HTTPException(404, "Delivery not found")
 
     net = body.gross_weight_kg - body.tare_weight_kg
-    ticket = _next_ticket(db)
+    ticket = _next_ticket(db, body.weigh_date)
 
     rec = WeighmentRecord(
         ticket_number=ticket,
