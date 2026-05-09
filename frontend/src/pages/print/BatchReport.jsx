@@ -88,12 +88,12 @@ function fv2(v) { return parseFloat(v || 0).toFixed(2); }
 
 // ── Shared cell / font styles ─────────────────────────────────────────────────
 const FONT = "Arial, Helvetica, sans-serif";
-const B1   = "1px solid #000";
-const TD   = { border: B1, padding: "1px 2px", fontSize: "9pt", textAlign: "center",
+const GDOT = "1px dotted #aaa";
+const TD   = { border: GDOT, padding: "1px 2px", fontSize: "9pt", textAlign: "center",
                fontFamily: FONT, whiteSpace: "nowrap" };
 const TH   = { ...TD, textAlign: "center", fontWeight: "bold", fontSize: "7px",
                whiteSpace: "pre-line" };
-const CAT  = { ...TH, fontSize: "9pt", borderBottom: B1 };
+const CAT  = { ...TH, fontSize: "9pt", borderBottom: GDOT };
 
 // ── Schwing Stetter Logo — exact match to shared image ───────────────────────
 // White background + dark border | Light green (left/narrow) + Dark teal (right/wide)
@@ -181,9 +181,8 @@ function M125Print({ d, rows, onActualChange }) {
   // ── Design tokens ─────────────────────────────────────────────────────────
   const F     = FONT;
   const fs    = "9pt";
-  const INNER = "1px dotted #aaa";   // gray dotted — inner cell dividers
-  const OUTER = "2px solid #000";    // black solid  — outer table border
-  const PAD   = "2pt 3pt";           // comfortable inner padding for values
+  const INNER = "1px dotted #aaa";   // gray dotted — cell dividers
+  const PAD   = "2pt 3pt";           // inner padding for values
 
   // Base data cell — inner border, proper padding, right-aligned value
   const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
@@ -524,7 +523,7 @@ function CP30Print({ d, rows, onActualChange }) {
       </table>
 
       {/* Date row */}
-      <table style={{ width: "100%", borderCollapse: "collapse", border: B1, marginBottom: "3px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", border: GDOT, marginBottom: "3px" }}>
         <tbody>
           <tr>
             <td style={{ padding: "2px 5px", width: "50%", fontFamily: FONT, fontSize: "8px" }}>
@@ -548,7 +547,7 @@ function CP30Print({ d, rows, onActualChange }) {
       </table>
 
       {/* Info grid */}
-      <table style={{ width: "100%", borderCollapse: "collapse", border: B1, marginBottom: "4px" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", border: GDOT, marginBottom: "4px" }}>
         <tbody>
           {[
             ["Batch Number / Docket Number", d.batch_number || "—", "Ordered Quantity",    `${parseFloat(d.quantity_m3).toFixed(2)} M³`],
@@ -614,7 +613,7 @@ function CP30Print({ d, rows, onActualChange }) {
           ))}
           <tr>
             <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic",
-              fontSize: "9pt", borderTop: "1px solid #000" }}>
+              fontSize: "9pt", borderTop: GDOT }}>
               Total Set Weight in Kgs.
             </td>
           </tr>
@@ -627,7 +626,7 @@ function CP30Print({ d, rows, onActualChange }) {
           </tr>
           <tr>
             <td colSpan={NCOLS} style={{ ...TD, textAlign: "left", fontStyle: "italic",
-              fontSize: "9pt", borderTop: "1px solid #000" }}>
+              fontSize: "9pt", borderTop: GDOT }}>
               Total Actual in Kgs.
             </td>
           </tr>
