@@ -239,7 +239,7 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
           <tr>
             <IC label="Order Number"   value={d.order_number ?? 0} />
-            <IC label="Truck Number"   value={d.vehicle_number} />
+            <IC label="Pour Type"      value={d.pour_type || "—"} />
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
           <tr>

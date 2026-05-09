@@ -11,6 +11,7 @@ class Delivery(Base):
     dc_number = Column(String(30), unique=True, nullable=False, index=True)
     batch_number = Column(Integer, nullable=True)
     order_number = Column(Integer, nullable=False, default=0, server_default="0")
+    pour_type = Column(String(50), nullable=True)
 
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     site_id = Column(Integer, ForeignKey("customer_sites.id"), nullable=False)

@@ -57,6 +57,7 @@ export default function NewDelivery() {
   const [deliveryTime, setDeliveryTime] = useState(nowTime);
   const [grossWeight, setGrossWeight] = useState("");
   const [orderNumber, setOrderNumber] = useState(0);
+  const [pourType, setPourType] = useState("");
   const [generateWeighment, setGenerateWeighment] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -137,6 +138,7 @@ export default function NewDelivery() {
         gross_weight_kg: grossWeight ? parseFloat(grossWeight) : null,
         generate_weighment: generateWeighment,
         order_number: parseInt(orderNumber) || 0,
+        pour_type: pourType || null,
       };
       const { data } = await api.post("/deliveries", payload);
       setSavedDelivery(data);
@@ -270,6 +272,29 @@ export default function NewDelivery() {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Order Number">
+              <input className="input" type="number" min="0" value={orderNumber}
+                onChange={e => setOrderNumber(e.target.value)} />
+            </Field>
+            <Field label="Pour Type">
+              <select className="input" value={pourType} onChange={e => setPourType(e.target.value)}>
+                <option value="">Select pour type…</option>
+                <option>Footing</option>
+                <option>Column</option>
+                <option>Slab</option>
+                <option>Flooring</option>
+                <option>Beam</option>
+                <option>Wall</option>
+                <option>Raft</option>
+                <option>Staircase</option>
+                <option>Lintel</option>
+                <option>Plinth Beam</option>
+                <option>Others</option>
+              </select>
+            </Field>
+          </div>
         </div>
 
         {/* ── Section 3: Vehicle & Driver ──────────────────────────────── */}
@@ -311,11 +336,7 @@ export default function NewDelivery() {
               <input className="input" type="time" value={deliveryTime} onChange={e => setDeliveryTime(e.target.value)} required />
             </Field>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Field label="Order Number">
-              <input className="input" type="number" min="0" value={orderNumber}
-                onChange={e => setOrderNumber(e.target.value)} />
-            </Field>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Gross Weight (kg)">
               <input className="input" type="number" step="0.01" min="0" value={grossWeight}
                 onChange={e => setGrossWeight(e.target.value)} />

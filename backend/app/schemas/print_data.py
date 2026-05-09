@@ -57,6 +57,7 @@ class PrintDataOut(BaseModel):
     dc_number: str
     batch_number: int | None
     order_number: int = 0
+    pour_type: str | None = None
     customer_name: str
     customer_gst: str | None
     billing_address: str | None

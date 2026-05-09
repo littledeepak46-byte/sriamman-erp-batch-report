@@ -18,6 +18,7 @@ class DeliveryCreate(BaseModel):
     gross_weight_kg: Decimal | None = None
     generate_weighment: bool = True
     order_number: int = 0
+    pour_type: str | None = None
 
 
 class DeliveryOut(BaseModel):
@@ -25,6 +26,7 @@ class DeliveryOut(BaseModel):
     dc_number: str
     batch_number: int | None
     order_number: int = 0
+    pour_type: str | None = None
     customer_id: int
     customer_name: str | None = None
     site_id: int
