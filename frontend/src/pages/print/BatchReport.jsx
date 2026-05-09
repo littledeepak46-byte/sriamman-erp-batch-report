@@ -201,6 +201,7 @@ function M125Print({ d, rows, onActualChange }) {
   return (
     <div style={{ fontFamily: F, fontSize: fs, backgroundColor: "#fff",
       padding: "4mm 15mm", boxSizing: "border-box" }}>
+      <div style={{ border: INNER, padding: "3mm" }}>
 
       {/* ══ HEADER — Logo (top-left) + Company name (center) ════════════════ */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "3px" }}>
@@ -459,6 +460,7 @@ function M125Print({ d, rows, onActualChange }) {
           </tr>
         </tbody>
       </table>
+      </div>{/* end gray outer border */}
     </div>
   );
 }
