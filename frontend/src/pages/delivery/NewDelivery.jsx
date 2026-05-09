@@ -91,8 +91,14 @@ export default function NewDelivery() {
   };
   const qtyConf = QTY_CONFIG[selectedMaterial?.name] ?? { unit: "m³", step: "0.01", min: "0.01" };
 
-  // Auto-clear grade when material changes
-  useEffect(() => { setGradeId(""); }, [materialTypeId]);
+  // Auto-clear grade, plant type, order number when material changes
+  useEffect(() => {
+    setGradeId("");
+    if (selectedMaterial?.name !== CONCRETE_NAME) {
+      setPlantType("None");
+      setOrderNumber(0);
+    }
+  }, [materialTypeId]);
   // Auto-clear site when customer changes
   useEffect(() => { setSiteId(""); }, [customerId]);
   // Auto-clear pumping if not concrete
@@ -246,11 +252,13 @@ export default function NewDelivery() {
         <div className="card space-y-4">
           <h2 className="font-semibold text-primary border-b pb-2">Material & Plant</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label="Plant Type" required>
-              <select className="input" value={plantType} onChange={e => setPlantType(e.target.value)} required>
-                {PLANT_TYPES.map(p => <option key={p}>{p}</option>)}
-              </select>
-            </Field>
+            {isConcreteSelected && (
+              <Field label="Plant Type" required>
+                <select className="input" value={plantType} onChange={e => setPlantType(e.target.value)} required>
+                  {PLANT_TYPES.map(p => <option key={p}>{p}</option>)}
+                </select>
+              </Field>
+            )}
             <Field label="Type of Material" required>
               <select className="input" value={materialTypeId} onChange={e => setMaterialTypeId(e.target.value)} required>
                 <option value="">Select…</option>
@@ -288,7 +296,7 @@ export default function NewDelivery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {isConcreteSelected && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Order Number">
               <input className="input" type="number" min="0" value={orderNumber}
                 onChange={e => setOrderNumber(e.target.value)} />
@@ -309,7 +317,7 @@ export default function NewDelivery() {
                 <option>Others</option>
               </select>
             </Field>
-          </div>
+          </div>}
         </div>
 
         {/* ── Section 3: Vehicle & Driver ──────────────────────────────── */}
