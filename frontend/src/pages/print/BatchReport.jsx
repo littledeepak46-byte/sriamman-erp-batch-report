@@ -302,8 +302,8 @@ function M125Print({ d, rows, onActualChange }) {
             ))}
           </tr>
 
-          {/* Row 18 — Label band — compact */}
-          <tr style={{ height: "12pt" }}>
+          {/* Row 18 — Label band — height = 2 data rows */}
+          <tr style={{ height: "24pt" }}>
             <td colSpan={NCOLS} style={lbl}>
               Target and Actual Value with moisture correction/absorption in % and other Corrections in Kgs.
             </td>
