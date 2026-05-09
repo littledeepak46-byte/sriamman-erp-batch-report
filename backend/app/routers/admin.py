@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
-from app.models.weighment import MaterialTolerance
+from app.models.weighment import MaterialTolerance, TimingSetting
 from app.routers.auth import get_current_user, require_role
 from app.schemas.auth import UserCreate, UserOut
 from app.services.auth import hash_password
@@ -43,6 +43,31 @@ def update_tolerance(
     row.tolerance = body.tolerance
     db.commit()
     db.refresh(row)
+    return row
+
+
+# ── Timing Settings ───────────────────────────────────────────────────────────
+class TimingSettingOut(BaseModel):
+    key: str; label: str; value: int; unit: str
+    class Config: from_attributes = True
+
+class TimingSettingUpdate(BaseModel):
+    value: int
+
+@router.get("/timing-settings", response_model=list[TimingSettingOut])
+def list_timing_settings(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    return db.query(TimingSetting).order_by(TimingSetting.key).all()
+
+@router.put("/timing-settings/{key}", response_model=TimingSettingOut)
+def update_timing_setting(
+    key: str, body: TimingSettingUpdate,
+    db: Session = Depends(get_db), _: User = Depends(require_role("admin")),
+):
+    row = db.get(TimingSetting, key)
+    if not row:
+        raise HTTPException(404, "Setting not found")
+    row.value = body.value
+    db.commit(); db.refresh(row)
     return row
 
 

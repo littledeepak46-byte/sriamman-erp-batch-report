@@ -39,6 +39,16 @@ class WeighmentSequence(Base):
     last_number = Column(Integer, nullable=False, default=0)
 
 
+class TimingSetting(Base):
+    """Editable time-offset settings for batch report time calculations."""
+    __tablename__ = "timing_settings"
+
+    key   = Column(String(30), primary_key=True)
+    label = Column(String(100), nullable=False)
+    value = Column(Integer, nullable=False)   # integer value (minutes or seconds)
+    unit  = Column(String(10), nullable=False, default="min")
+
+
 class MaterialTolerance(Base):
     """Editable tolerance bands used in RANDBETWEEN actual weight generation."""
     __tablename__ = "material_tolerances"

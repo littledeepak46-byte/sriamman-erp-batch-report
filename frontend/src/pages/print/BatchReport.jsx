@@ -154,7 +154,7 @@ function IRR({ label, value, bold }) {
 // M1.25 Print Template — faithful to "other Batching Slip.xlsx"
 // Print area A1:U73 | White bg | Gray dotted borders | A4 Portrait
 // ═══════════════════════════════════════════════════════════════════════════
-function M125Print({ d, rows, onActualChange }) {
+function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighmentStr }) {
   const cols   = COLS_M125;
   const dm     = d.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(d.quantity_m3), "M1.25");
@@ -242,8 +242,8 @@ function M125Print({ d, rows, onActualChange }) {
         <tbody>
           <tr>
             <IC label="Batch Date"        value={dateStr} />
-            <IC label="Batch Start Time"  value={timeStr} />
-            <IC label="Batch End Time"    value="—" />
+            <IC label="Batch Start Time"  value={batchStartStr || timeStr} />
+            <IC label="Batch End Time"    value={batchEndStr || "—"} />
           </tr>
           <tr>
             <IC label="Batch Number"   value={d.batch_number} />
@@ -681,16 +681,28 @@ export default function BatchReport() {
     queryFn: () => api.get("/admin/tolerances").then(r => r.data),
     staleTime: 60000,
   });
-  // Build tolerance lookup from API (falls back to hardcoded TOLERANCE if not loaded yet)
+  const { data: timingData = [] } = useQuery({
+    queryKey: ["timing-settings"],
+    queryFn: () => api.get("/admin/timing-settings").then(r => r.data),
+    staleTime: 60000,
+  });
+
+  // Build tolerance lookup
   const TOL = tolData.length
     ? Object.fromEntries(tolData.map(t => [t.key, parseFloat(t.tolerance)]))
     : TOLERANCE;
 
+  // Build timing lookup  { batch_end_min:2, batch_end_max:4, ... }
+  const TIM = Object.fromEntries(timingData.map(t => [t.key, t.value]));
+
   const printRef      = useRef();
-  const randRowsRef   = useRef({ id: null, rows: null }); // cache random actuals per delivery
+  const randRowsRef   = useRef({ id: null, rows: null });
+  const timingRef     = useRef(null); // cache computed times per delivery
+
   const [saving,  setSaving]  = useState(false);
   const [saved,   setSaved]   = useState(false);
   const [actuals, setActuals] = useState(null);
+  const [dcTime,  setDcTime]  = useState(null); // editable DC time (null = use now)
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -705,6 +717,33 @@ export default function BatchReport() {
   const cols = COLS[data.plant_type] || COLS_M125;
   const dm   = data.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(data.quantity_m3), data.plant_type);
+
+  // ── Compute times once per delivery (cached in timingRef) ─────────────────
+  const fmt = (d) => d.toTimeString().slice(0, 8); // HH:MM:SS
+  const fmtDT = (d) => d.toTimeString().slice(0, 5); // HH:MM for input
+
+  if (!timingRef.current || timingRef.current.id !== data.id) {
+    const endMin   = TIM.batch_end_min   ?? 2;
+    const endMax   = TIM.batch_end_max   ?? 4;
+    const durSec   = TIM.batch_per_duration ?? 69;
+    const wMin     = TIM.weighment_min   ?? 2;
+    const wMax     = TIM.weighment_max   ?? 4;
+
+    const dc       = dcTime ? new Date(`1970-01-01T${dcTime}`) : new Date();
+    const endOff   = (endMin + Math.random() * (endMax - endMin)) * 60 * 1000;
+    const batchEnd = new Date(dc - endOff);
+    const batchStart = new Date(batchEnd - numBatches * durSec * 1000);
+    const wOff     = (wMin  + Math.random() * (wMax  - wMin))  * 60 * 1000;
+    const weighment = new Date(batchEnd + wOff);
+
+    timingRef.current = {
+      id: data.id,
+      batchEndStr:   fmt(batchEnd),
+      batchStartStr: fmt(batchStart),
+      weighmentStr:  fmt(weighment),
+    };
+  }
+  const { batchEndStr, batchStartStr, weighmentStr } = timingRef.current;
 
   const getRows = () => {
     if (actuals) return actuals;
@@ -757,6 +796,12 @@ export default function BatchReport() {
         <span className="text-sm font-semibold text-primary">
           Batch Report — {data.plant_type} | Batch #{data.batch_number} | {data.grade_name}
         </span>
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <span>DC Time:</span>
+          <input type="time" className="input py-1 text-xs w-28"
+            value={dcTime ?? new Date().toTimeString().slice(0,5)}
+            onChange={e => { setDcTime(e.target.value); timingRef.current = null; }} />
+        </div>
         <div className="flex items-center gap-2 ml-auto">
           <button className="btn-secondary flex items-center gap-1" onClick={saveActuals} disabled={saving}>
             <Save size={14} /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save Actuals"}
@@ -790,8 +835,10 @@ export default function BatchReport() {
             boxShadow: "0 2px 16px rgba(0,0,0,0.25)",
           }}>
           {data.plant_type === "M1.25"
-            ? <M125Print d={data} rows={rows} onActualChange={handleActualChange} />
-            : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange} />
+            ? <M125Print d={data} rows={rows} onActualChange={handleActualChange}
+                batchEndStr={batchEndStr} batchStartStr={batchStartStr} weighmentStr={weighmentStr} />
+            : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange}
+                batchEndStr={batchEndStr} batchStartStr={batchStartStr} weighmentStr={weighmentStr} />
           }
         </div>
       </div>

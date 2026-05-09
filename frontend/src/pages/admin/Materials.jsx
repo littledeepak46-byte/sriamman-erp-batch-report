@@ -5,7 +5,7 @@ import api from "../../api/axios";
 import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-const TABS = ["Material Types & Grades", "Pumping Types", "Ingredient Labels", "Batch Tolerances"];
+const TABS = ["Material Types & Grades", "Pumping Types", "Ingredient Labels", "Batch Tolerances", "Time Settings"];
 
 export default function Materials() {
   const [tab, setTab] = useState("Material Types & Grades");
@@ -26,6 +26,7 @@ export default function Materials() {
       {tab === "Pumping Types" && <PumpingTypesTab />}
       {tab === "Ingredient Labels" && <IngredientLabelsTab />}
       {tab === "Batch Tolerances" && <BatchTolerancesTab />}
+      {tab === "Time Settings" && <TimeSettingsTab />}
     </div>
   );
 }
@@ -368,6 +369,79 @@ function BatchTolerancesTab() {
                       className="btn-primary text-xs px-3 py-1"
                       disabled={saving[row.key]}
                       onClick={() => save(row.key)}>
+                      {saving[row.key] ? "…" : "Save"}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Time Settings Tab ─────────────────────────────────────────────────────────
+function TimeSettingsTab() {
+  const qc = useQueryClient();
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["timing-settings"],
+    queryFn: () => api.get("/admin/timing-settings").then(r => r.data),
+  });
+  const [editing, setEditing] = useState({});
+  const [saving, setSaving] = useState({});
+
+  async function save(key) {
+    setSaving(s => ({ ...s, [key]: true }));
+    try {
+      await api.put(`/admin/timing-settings/${key}`, { value: parseInt(editing[key]) });
+      qc.invalidateQueries(["timing-settings"]);
+      setEditing(e => { const n = { ...e }; delete n[key]; return n; });
+    } finally {
+      setSaving(s => ({ ...s, [key]: false }));
+    }
+  }
+
+  if (isLoading) return <div className="p-4 text-gray-400">Loading…</div>;
+
+  const ORDER = ["batch_end_min","batch_end_max","batch_per_duration","weighment_min","weighment_max"];
+  const sorted = [...rows].sort((a,b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
+
+  return (
+    <div className="card space-y-4">
+      <div className="text-sm text-gray-500 space-y-1">
+        <p><strong>DC Time</strong> = now (editable on the report)</p>
+        <p><strong>Batch End Time</strong> = DC Time − random(min → max) minutes</p>
+        <p><strong>Batch Start Time</strong> = Batch End − (batches × duration per batch)</p>
+        <p><strong>Weighment Time</strong> = Batch End + random(min → max) minutes</p>
+      </div>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-gray-500">
+            <th className="pb-2 pr-4">Setting</th>
+            <th className="pb-2 w-32">Value</th>
+            <th className="pb-2 w-16">Unit</th>
+            <th className="pb-2 w-20"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map(row => {
+            const val = editing[row.key] !== undefined ? editing[row.key] : row.value;
+            const changed = editing[row.key] !== undefined;
+            return (
+              <tr key={row.key} className="border-b hover:bg-gray-50">
+                <td className="py-2 pr-4 font-medium">{row.label}</td>
+                <td className="py-2 pr-4">
+                  <input className="input w-full" type="number" min="1"
+                    value={val}
+                    onChange={e => setEditing(ed => ({ ...ed, [row.key]: e.target.value }))} />
+                </td>
+                <td className="py-2 pr-4 text-gray-400">{row.unit}</td>
+                <td className="py-2">
+                  {changed && (
+                    <button className="btn-primary text-xs px-3 py-1"
+                      disabled={saving[row.key]} onClick={() => save(row.key)}>
                       {saving[row.key] ? "…" : "Save"}
                     </button>
                   )}
