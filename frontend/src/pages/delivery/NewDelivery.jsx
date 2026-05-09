@@ -357,7 +357,7 @@ export default function NewDelivery() {
           <div className="grid grid-cols-3 gap-4 text-sm text-gray-600">
             <div><span className="font-medium">DC Number</span><p className="text-xs text-gray-400">SARMC / FY / MON / NNNN</p></div>
             <div><span className="font-medium">Batching Number</span><p className="text-xs text-gray-400">{plantType !== "None" ? `Per-${plantType} global sequence` : "N/A (no plant selected)"}</p></div>
-            <div><span className="font-medium">Weighment Ticket</span><p className="text-xs text-gray-400">SARMC / FY / WGH / NNNN — resets every April</p></div>
+            <div><span className="font-medium">Weighment Ticket</span><p className="text-xs text-gray-400">WGH-NNNNN — resets every April</p></div>
           </div>
         </div>
 

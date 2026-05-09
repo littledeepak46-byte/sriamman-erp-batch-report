@@ -36,7 +36,7 @@ def _next_ticket(db: Session, weigh_date: date) -> str:
         db.flush()
     seq.last_number += 1
     db.flush()
-    return f"SARMC/{fy}/WGH/{seq.last_number:04d}"
+    return f"WGH-{seq.last_number:05d}"
 
 
 # ── Weighment CRUD ─────────────────────────────────────────────────────────────
