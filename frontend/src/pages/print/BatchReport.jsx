@@ -246,7 +246,7 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
           <tr>
             <IC label="Order Number"   value={d.order_number ?? 0} />
-            <IC label="Pour Type"      value={d.pour_type || "—"} />
+            <IC label="Truck Number"   value={d.vehicle_number} />
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
           <tr>
