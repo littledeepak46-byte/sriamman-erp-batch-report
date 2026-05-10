@@ -262,9 +262,8 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
         </tbody>
       </table>
 
-      {/* ══ MATERIAL TABLE — scrollable on screen, auto on print ═══════════ */}
-      <div style={{ overflowX: "auto" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "700px", tableLayout: "fixed" }}>
+      {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header — no borders at all */}
           <tr style={{ height: "16pt" }}>
@@ -446,7 +445,6 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
         </tbody>
       </table>
-      </div>{/* end scroll wrapper */}
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
@@ -815,6 +813,10 @@ export default function BatchReport() {
             .print-only    { display: inline !important; }
           }
           @media screen { .print-only { display: none !important; } }
+          /* Hide number input spinners so actuals look clean */
+          input[type=number]::-webkit-inner-spin-button,
+          input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+          input[type=number] { -moz-appearance: textfield; }
         `}</style>
         {/* A4 page shadow on screen */}
         <div ref={printRef}
