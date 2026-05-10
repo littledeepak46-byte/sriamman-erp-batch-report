@@ -256,7 +256,7 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
           <tr>
             <IC label="Site"           value={d.site_location || d.site_name} />
-            <IC label="Batch Size"     value={String(batchSize)} bold />
+            <IC label="Batch Size"     value={batchSize.toFixed(2)} bold />
             <IC label="With This Load" value={withLoad.toFixed(2)} />
           </tr>
         </tbody>
