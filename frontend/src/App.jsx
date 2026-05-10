@@ -9,6 +9,7 @@ import Vehicles from "./pages/master/Vehicles";
 import DesignMix from "./pages/master/DesignMix";
 import NewDelivery from "./pages/delivery/NewDelivery";
 import History from "./pages/delivery/History";
+import EditDelivery from "./pages/delivery/EditDelivery";
 import DeliveryChallan from "./pages/print/DeliveryChallan";
 import BatchReport from "./pages/print/BatchReport";
 import WeighmentSlip from "./pages/print/WeighmentSlip";
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/master/design-mix" element={<PrivateRoute><DesignMix /></PrivateRoute>} />
             <Route path="/delivery/new" element={<PrivateRoute><NewDelivery /></PrivateRoute>} />
             <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+            <Route path="/delivery/:id/edit" element={<PrivateRoute><EditDelivery /></PrivateRoute>} />
             <Route path="/delivery/:id/challan" element={<PrivateRoute><DeliveryChallan /></PrivateRoute>} />
             <Route path="/delivery/:id/batch-report" element={<PrivateRoute><BatchReport /></PrivateRoute>} />
             <Route path="/delivery/:id/weighment" element={<PrivateRoute><WeighmentSlip /></PrivateRoute>} />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Search, Printer, FlaskConical, Scale, Download } from "lucide-react";
+import { Search, Printer, FlaskConical, Scale, Download, Pencil } from "lucide-react";
 import api from "../../api/axios";
 
 export default function History() {
@@ -108,6 +108,10 @@ export default function History() {
                   <td className="px-4 py-2 font-mono text-xs">{d.vehicle_number}</td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
+                      <button className="text-gray-400 hover:text-yellow-600" title="Edit Delivery"
+                        onClick={() => navigate(`/delivery/${d.id}/edit`)}>
+                        <Pencil size={14} />
+                      </button>
                       <button className="text-gray-400 hover:text-primary" title="Print Delivery Challan"
                         onClick={() => navigate(`/delivery/${d.id}/challan`)}>
                         <Printer size={14} />

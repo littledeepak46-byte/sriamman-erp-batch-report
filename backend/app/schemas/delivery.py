@@ -21,6 +21,20 @@ class DeliveryCreate(BaseModel):
     pour_type: str | None = None
 
 
+class DeliveryUpdate(BaseModel):
+    vehicle_id: int
+    driver_id: int
+    grade_id: int
+    pumping_type_id: int | None = None
+    quantity_m3: Decimal
+    delivery_date: date
+    delivery_time: time
+    gross_weight_kg: Decimal | None = None
+    order_number: int = 0
+    pour_type: str | None = None
+    plant_type: str | None = None
+
+
 class DeliveryOut(BaseModel):
     id: int
     dc_number: str

@@ -19,6 +19,18 @@ class WeighmentCreate(BaseModel):
     # No validation — Net = Gross − Empty always, including negative values
 
 
+class WeighmentUpdate(BaseModel):
+    vehicle_number: str
+    driver_name: str | None = None
+    material_description: str | None = None
+    supplier: str | None = None
+    gross_weight_kg: Decimal | None = None
+    tare_weight_kg: Decimal
+    weigh_date: date
+    weigh_time: time
+    remarks: str | None = None
+
+
 class WeighmentOut(BaseModel):
     id: int
     ticket_number: str

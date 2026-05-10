@@ -13,7 +13,7 @@ from app.models.weighment import IngredientLabel, WeighmentRecord, WeighmentSequ
 from app.routers.auth import get_current_user, require_role
 from app.schemas.weighment import (
     IngredientLabelOut, IngredientLabelUpdate,
-    WeighmentCreate, WeighmentOut,
+    WeighmentCreate, WeighmentOut, WeighmentUpdate,
 )
 
 router = APIRouter(tags=["weighment"])
@@ -113,6 +113,33 @@ def get_weighment(wid: int, db: Session = Depends(get_db), _: User = Depends(get
     rec = db.get(WeighmentRecord, wid)
     if not rec:
         raise HTTPException(404, "Weighment record not found")
+    out = WeighmentOut.model_validate(rec)
+    if rec.delivery_id:
+        d = db.get(Delivery, rec.delivery_id)
+        out.dc_number = d.dc_number if d else None
+    return out
+
+
+@router.put("/weighments/{wid}", response_model=WeighmentOut)
+def update_weighment(
+    wid: int, body: WeighmentUpdate,
+    db: Session = Depends(get_db), _: User = Depends(get_current_user),
+):
+    rec = db.get(WeighmentRecord, wid)
+    if not rec:
+        raise HTTPException(404, "Weighment record not found")
+    gross = body.gross_weight_kg if body.gross_weight_kg is not None else 0
+    rec.vehicle_number       = body.vehicle_number
+    rec.driver_name          = body.driver_name
+    rec.material_description = body.material_description
+    rec.supplier             = body.supplier
+    rec.gross_weight_kg      = gross
+    rec.tare_weight_kg       = body.tare_weight_kg
+    rec.net_weight_kg        = gross - body.tare_weight_kg
+    rec.weigh_date           = body.weigh_date
+    rec.weigh_time           = body.weigh_time
+    rec.remarks              = body.remarks
+    db.commit(); db.refresh(rec)
     out = WeighmentOut.model_validate(rec)
     if rec.delivery_id:
         d = db.get(Delivery, rec.delivery_id)

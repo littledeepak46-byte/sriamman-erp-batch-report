@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Plus, Printer, Trash2, Scale } from "lucide-react";
+import { Plus, Printer, Trash2, Scale, Pencil } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import api from "../../api/axios";
 import Modal from "../../components/Modal";
@@ -32,6 +32,109 @@ function toSlipData(rec) {
     id:              rec.id,
   };
 }
+
+// ── Edit form for existing weighment records ─────────────────────────────────
+function WeighmentEditForm({ rec, vehicles, onSave, error, saving, onClose }) {
+  const [vehicleNo,  setVehicleNo]  = useState(rec.vehicle_number || "");
+  const [driverName, setDriverName] = useState(rec.driver_name || "");
+  const [grossWt,    setGrossWt]    = useState(rec.gross_weight_kg ? String(rec.gross_weight_kg) : "");
+  const [tare,       setTare]       = useState(rec.tare_weight_kg ? String(rec.tare_weight_kg) : "");
+  const netWt = (parseFloat(grossWt || 0) - parseFloat(tare || 0)).toFixed(2);
+
+  function handleVehicleChange(val) {
+    setVehicleNo(val);
+    const found = vehicles.find(v => v.vehicle_number === val);
+    if (found?.empty_weight_kg) setTare(String(found.empty_weight_kg));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    onSave({
+      vehicle_number:       vehicleNo,
+      driver_name:          driverName || null,
+      material_description: fd.material_description || null,
+      supplier:             fd.supplier || null,
+      gross_weight_kg:      grossWt ? parseFloat(grossWt) : null,
+      tare_weight_kg:       parseFloat(tare),
+      weigh_date:           fd.weigh_date,
+      weigh_time:           fd.weigh_time + ":00",
+      remarks:              fd.remarks || null,
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Vehicle *</label>
+          <input className="input font-mono uppercase" list="veh-edit-list"
+            value={vehicleNo} onChange={e => handleVehicleChange(e.target.value)} required />
+          <datalist id="veh-edit-list">
+            {vehicles.map(v => <option key={v.id} value={v.vehicle_number} />)}
+          </datalist>
+        </div>
+        <div>
+          <label className="label">Driver</label>
+          <input className="input" value={driverName} onChange={e => setDriverName(e.target.value)} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Material Description</label>
+          <input className="input" name="material_description" defaultValue={rec.material_description || ""} />
+        </div>
+        <div>
+          <label className="label">Supplier</label>
+          <input className="input" name="supplier" defaultValue={rec.supplier || ""} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Date *</label>
+          <input className="input" type="date" name="weigh_date" defaultValue={rec.weigh_date} required />
+        </div>
+        <div>
+          <label className="label">Time *</label>
+          <input className="input" type="time" name="weigh_time" defaultValue={rec.weigh_time?.slice(0,5)} required />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="label">Loaded Weight (kg)</label>
+          <input className="input" type="number" step="0.01" value={grossWt}
+            onChange={e => setGrossWt(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Empty Weight (kg) *</label>
+          <input className="input" type="number" step="0.01" value={tare}
+            onChange={e => setTare(e.target.value)} required />
+        </div>
+        <div>
+          <label className="label">Net Weight</label>
+          <div className={`border rounded px-3 py-2 text-sm font-bold min-h-[38px]
+            ${parseFloat(netWt) < 0 ? "bg-red-50 border-red-300 text-red-600"
+              : parseFloat(netWt) > 0 ? "bg-green-50 border-green-300 text-green-700"
+              : "bg-gray-50 border-gray-200 text-gray-500"}`}>
+            {parseFloat(netWt).toLocaleString()} kg
+          </div>
+        </div>
+      </div>
+      <div>
+        <label className="label">Remarks</label>
+        <input className="input" name="remarks" defaultValue={rec.remarks || ""} />
+      </div>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+        <button type="submit" className="btn-primary" disabled={saving}>
+          {saving ? "Saving…" : "Save Changes"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 
 // ── Shared weighment entry form (INWARD + OUTWARD) ────────────────────────────
 function WeighmentForm({ type, vehicles, onCreate, error, saving, onClose }) {
@@ -226,6 +329,7 @@ function OutwardTab() {
   const [dateTo,   setDateTo]       = useState(today);
   const [applied,  setApplied]      = useState({ date_from: today, date_to: today });
   const [modal,    setModal]        = useState(false);
+  const [editRec,  setEditRec]      = useState(null); // record being edited
   const [confirm,  setConfirm]      = useState(null);
   const [printRec, setPrintRec]     = useState(null);
   const [error,    setError]        = useState("");
@@ -258,6 +362,11 @@ function OutwardTab() {
   const del = useMutation({
     mutationFn: id => api.delete(`/weighments/${id}`),
     onSuccess: () => { qc.invalidateQueries(["weighments-outward"]); setConfirm(null); },
+  });
+  const update = useMutation({
+    mutationFn: ({ id, ...d }) => api.put(`/weighments/${id}`, d),
+    onSuccess: () => { qc.invalidateQueries(["weighments-outward"]); setEditRec(null); setError(""); },
+    onError: e => setError(e.response?.data?.detail || "Error saving."),
   });
 
   const deliveryOutward = deliveries.filter(d => d.generate_weighment === 1);
@@ -404,6 +513,10 @@ function OutwardTab() {
                             onClick={() => printRecord(r)}>
                             <Printer size={14} />
                           </button>
+                          <button className="text-gray-400 hover:text-yellow-500" title="Edit"
+                            onClick={() => setEditRec(r)}>
+                            <Pencil size={14} />
+                          </button>
                           <button className="text-gray-400 hover:text-red-500"
                             onClick={() => setConfirm({ id: r.id, name: r.ticket_number })}>
                             <Trash2 size={14} />
@@ -446,6 +559,16 @@ function OutwardTab() {
             saving={create.isPending}
             onClose={() => setModal(false)}
           />
+        </Modal>
+      )}
+
+      {editRec && (
+        <Modal title={`Edit — ${editRec.ticket_number}`} onClose={() => { setEditRec(null); setError(""); }}>
+          <WeighmentEditForm
+            rec={editRec} vehicles={vehicles}
+            onSave={d => update.mutate({ id: editRec.id, ...d })}
+            error={error} saving={update.isPending}
+            onClose={() => { setEditRec(null); setError(""); }} />
         </Modal>
       )}
 

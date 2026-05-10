@@ -15,7 +15,7 @@ from app.models.vehicle import Driver, Vehicle
 from app.routers.auth import get_current_user
 from app.models.delivery import BatchReportActual
 from app.schemas.delivery import (
-    CumulativeQtyRequest, DeliveryCreate, DeliveryOut, DeliveryStats,
+    CumulativeQtyRequest, DeliveryCreate, DeliveryOut, DeliveryStats, DeliveryUpdate,
 )
 from app.schemas.print_data import (
     BatchActualRow, BatchActualsSave, BatchActualRow as BAR,
@@ -181,6 +181,37 @@ def list_deliveries(
     if plant_type:
         q = q.filter(Delivery.plant_type == plant_type)
     return [_enrich(d, db) for d in q.offset(offset).limit(limit).all()]
+
+
+@router.put("/{delivery_id}", response_model=DeliveryOut)
+def update_delivery(
+    delivery_id: int, body: DeliveryUpdate,
+    db: Session = Depends(get_db), _: User = Depends(get_current_user),
+):
+    d = db.get(Delivery, delivery_id)
+    if not d:
+        raise HTTPException(404, "Delivery not found")
+    vehicle = db.get(Vehicle, body.vehicle_id)
+    if not vehicle:
+        raise HTTPException(404, "Vehicle not found")
+    empty_weight = float(vehicle.empty_weight_kg) if vehicle.empty_weight_kg else 0.0
+    net_weight = (float(body.gross_weight_kg) - empty_weight) if body.gross_weight_kg else None
+
+    d.vehicle_id      = body.vehicle_id
+    d.driver_id       = body.driver_id
+    d.grade_id        = body.grade_id
+    d.pumping_type_id = body.pumping_type_id
+    d.quantity_m3     = body.quantity_m3
+    d.delivery_date   = body.delivery_date
+    d.delivery_time   = body.delivery_time
+    d.gross_weight_kg = body.gross_weight_kg
+    d.empty_weight_kg = Decimal(str(empty_weight))
+    d.net_weight_kg   = Decimal(str(net_weight)) if net_weight is not None else None
+    d.order_number    = body.order_number or 0
+    d.pour_type       = body.pour_type
+    d.plant_type      = body.plant_type
+    db.commit(); db.refresh(d)
+    return _enrich(d, db)
 
 
 @router.get("/{delivery_id}", response_model=DeliveryOut)
