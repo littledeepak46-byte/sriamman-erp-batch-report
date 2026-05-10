@@ -262,8 +262,9 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
         </tbody>
       </table>
 
-      {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+      {/* ══ MATERIAL TABLE — scrollable on screen, auto on print ═══════════ */}
+      <div style={{ overflowX: "auto" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "700px", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header — no borders at all */}
           <tr style={{ height: "16pt" }}>
@@ -445,6 +446,7 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
         </tbody>
       </table>
+      </div>{/* end scroll wrapper */}
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
