@@ -10,6 +10,7 @@ from app.models.customer import Customer, CustomerSite
 from app.models.delivery import Delivery
 from app.models.material import MaterialGrade
 from app.models.sequence import DCSequence, BatchSequence
+from app.models.weighment import WeighmentSequence
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.routers.auth import get_current_user, require_role
@@ -157,3 +158,22 @@ def dc_sequences(db: Session = Depends(get_db), _: User = Depends(require_role("
 @router.get("/sequences/batch", response_model=list[BatchSequenceRow])
 def batch_sequences(db: Session = Depends(get_db), _: User = Depends(require_role("admin", "supervisor"))):
     return db.query(BatchSequence).order_by(BatchSequence.plant_type).all()
+
+
+class WeighmentSequenceRow(BaseModel):
+    year_code: str
+    last_number: int
+    preview: str   # formatted last ticket for that year
+
+
+@router.get("/sequences/weighment", response_model=list[WeighmentSequenceRow])
+def weighment_sequences(db: Session = Depends(get_db), _: User = Depends(require_role("admin", "supervisor"))):
+    rows = db.query(WeighmentSequence).order_by(WeighmentSequence.year_code.desc()).all()
+    return [
+        WeighmentSequenceRow(
+            year_code=r.year_code,
+            last_number=r.last_number,
+            preview=f"WGH-{r.last_number:05d}",
+        )
+        for r in rows
+    ]

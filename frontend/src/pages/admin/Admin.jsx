@@ -6,7 +6,7 @@ import Modal from "../../components/Modal";
 import { useAuth } from "../../context/AuthContext";
 
 const ROLES = ["operator", "supervisor", "admin"];
-const TABS = ["Users", "DC Sequences", "Batch Sequences"];
+const TABS = ["Users", "DC Sequences", "Batch Sequences", "Weighment Sequences"];
 
 const ROLE_BADGE = {
   admin:      "bg-purple-100 text-purple-700",
@@ -34,6 +34,11 @@ export default function Admin() {
     queryKey: ["batch-sequences"],
     queryFn: () => api.get("/reports/sequences/batch").then(r => r.data),
     enabled: tab === "Batch Sequences",
+  });
+  const { data: weighmentSeqs = [] } = useQuery({
+    queryKey: ["weighment-sequences"],
+    queryFn: () => api.get("/reports/sequences/weighment").then(r => r.data),
+    enabled: tab === "Weighment Sequences",
   });
 
   const createUser = useMutation({
@@ -193,6 +198,35 @@ export default function Admin() {
               ))}
               {!batchSeqs.length && (
                 <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">No batch sequences yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── Weighment Sequences tab ────────────────────────────────────────── */}
+      {tab === "Weighment Sequences" && (
+        <div className="card p-0 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-600">Fiscal Year</th>
+                <th className="text-right px-4 py-3 text-gray-600">Last Ticket No.</th>
+                <th className="text-left px-4 py-3 text-gray-600">Last Ticket</th>
+                <th className="text-left px-4 py-3 text-gray-600">Next Ticket</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weighmentSeqs.map(r => (
+                <tr key={r.year_code} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3 font-semibold text-primary">{r.year_code}</td>
+                  <td className="px-4 py-3 text-right font-mono text-lg">{r.last_number}</td>
+                  <td className="px-4 py-3 font-mono text-gray-500">{r.preview}</td>
+                  <td className="px-4 py-3 font-mono text-blue-600">WGH-{String(r.last_number + 1).padStart(5, "0")}</td>
+                </tr>
+              ))}
+              {!weighmentSeqs.length && (
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No weighment sequences yet.</td></tr>
               )}
             </tbody>
           </table>
