@@ -314,20 +314,22 @@ export default function NewDelivery() {
                 onChange={e => setOrderNumber(e.target.value)} />
             </Field>
             <Field label="Pour Type">
-              <select className="input" value={pourType} onChange={e => setPourType(e.target.value)}>
-                <option value="">Select pour type…</option>
-                <option>Footing</option>
-                <option>Column</option>
-                <option>Slab</option>
-                <option>Flooring</option>
-                <option>Beam</option>
-                <option>Wall</option>
-                <option>Raft</option>
-                <option>Staircase</option>
-                <option>Lintel</option>
-                <option>Plinth Beam</option>
-                <option>Others</option>
-              </select>
+              <input className="input" list="pour-type-opts"
+                value={pourType} onChange={e => setPourType(e.target.value)}
+                placeholder="Select or type…" />
+              <datalist id="pour-type-opts">
+                <option value="Footing" />
+                <option value="Column" />
+                <option value="Slab" />
+                <option value="Flooring" />
+                <option value="Beam" />
+                <option value="Wall" />
+                <option value="Raft" />
+                <option value="Staircase" />
+                <option value="Lintel" />
+                <option value="Plinth Beam" />
+                <option value="Others" />
+              </datalist>
             </Field>
           </div>}
         </div>
