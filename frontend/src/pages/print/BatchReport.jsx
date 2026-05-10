@@ -143,7 +143,9 @@ function IRR({ label, value, bold }) {
 // M1.25 Print Template — faithful to "other Batching Slip.xlsx"
 // Print area A1:U73 | White bg | Gray dotted borders | A4 Portrait
 // ═══════════════════════════════════════════════════════════════════════════
-function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighmentStr }) {
+const POUR_TYPES = ["Footing","Column","Slab","Flooring","Beam","Wall","Raft","Staircase","Lintel","Plinth Beam","Others"];
+
+function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighmentStr, pourType, onPourTypeChange }) {
   const cols   = COLS_M125;
   const dm     = d.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(d.quantity_m3), "M1.25");
@@ -246,7 +248,27 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
           <tr>
             <IC label="Order Number"   value={d.order_number ?? 0} />
-            <IC label="Truck Number"   value={d.vehicle_number} />
+            <td style={{ padding: "1pt 4pt", fontFamily: F, fontSize: "10pt",
+              verticalAlign: "top", width: "33%" }}>
+              <div style={{ display: "flex", alignItems: "flex-start" }}>
+                <span style={{ fontWeight: "bold", width: "100px", flexShrink: 0,
+                  whiteSpace: "nowrap", overflow: "hidden" }}>Pour Type</span>
+                <span style={{ flexShrink: 0, marginRight: "1px" }}>:</span>
+                <span style={{ flex: 1 }}>
+                  <input className="no-print" list="pour-type-list"
+                    value={pourType}
+                    onChange={e => onPourTypeChange(e.target.value)}
+                    style={{ width: "100%", border: "none", fontSize: "10pt",
+                      fontFamily: F, background: "transparent", outline: "none",
+                      paddingLeft: "1px" }}
+                    placeholder="Select or type…" />
+                  <datalist id="pour-type-list">
+                    {POUR_TYPES.map(p => <option key={p} value={p} />)}
+                  </datalist>
+                  <span className="print-only" style={{ display: "none" }}>{pourType || "—"}</span>
+                </span>
+              </div>
+            </td>
             <IC label="Adj/Manual Qty" value="0.00" />
           </tr>
           <tr>
@@ -688,10 +710,11 @@ export default function BatchReport() {
   const randRowsRef   = useRef({ id: null, rows: null });
   const timingRef     = useRef(null); // cache computed times per delivery
 
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [actuals, setActuals] = useState(null);
-  const [dcTime,  setDcTime]  = useState(null); // editable DC time (null = use now)
+  const [saving,   setSaving]   = useState(false);
+  const [saved,    setSaved]    = useState(false);
+  const [actuals,  setActuals]  = useState(null);
+  const [dcTime,   setDcTime]   = useState(null);
+  const [pourType, setPourType] = useState(null); // null = use value from delivery // editable DC time (null = use now)
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -825,7 +848,8 @@ export default function BatchReport() {
           }}>
           {data.plant_type === "M1.25"
             ? <M125Print d={data} rows={rows} onActualChange={handleActualChange}
-                batchEndStr={batchEndStr} batchStartStr={batchStartStr} weighmentStr={weighmentStr} />
+                batchEndStr={batchEndStr} batchStartStr={batchStartStr} weighmentStr={weighmentStr}
+                pourType={pourType ?? data.pour_type ?? ""} onPourTypeChange={setPourType} />
             : <CP30Print  d={data} rows={rows} onActualChange={handleActualChange}
                 batchEndStr={batchEndStr} batchStartStr={batchStartStr} weighmentStr={weighmentStr} />
           }
