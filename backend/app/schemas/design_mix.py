@@ -37,21 +37,11 @@ class DesignMixBase(BaseModel):
     col3: Decimal = Decimal("0")
 
 class DesignMixCreate(DesignMixBase):
-    @model_validator(mode="after")
-    def check_density(self):
-        total = sum(float(getattr(self, f)) for f in ALL_INGREDIENTS)
-        if total < DENSITY_MIN:
-            raise ValueError(f"Total density {total:.1f} kg/m³ is below minimum {DENSITY_MIN} kg/m³")
-        return self
+    pass
 
 
 class DesignMixUpdate(DesignMixBase):
-    @model_validator(mode="after")
-    def check_density(self):
-        total = sum(float(getattr(self, f)) for f in ALL_INGREDIENTS)
-        if total < DENSITY_MIN:
-            raise ValueError(f"Total density {total:.1f} kg/m³ is below minimum {DENSITY_MIN} kg/m³")
-        return self
+    pass
 
 
 class DesignMixOut(DesignMixBase):

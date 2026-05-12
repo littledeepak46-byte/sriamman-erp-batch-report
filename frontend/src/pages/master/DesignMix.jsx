@@ -7,6 +7,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 
 const DENSITY_MIN = 2410;
 
+// step: "1" = integer (aggregates, cement, water), "0.1" = 1 decimal (admixtures)
 const GROUPS = [
   {
     label: "Common Ingredients",
@@ -14,16 +15,16 @@ const GROUPS = [
     color: "bg-blue-50 border-blue-200",
     headerColor: "text-blue-700",
     ingredients: [
-      { key: "sand1",    label: "Sand 1" },
-      { key: "sand2",    label: "Sand 2" },
-      { key: "agg_20mm", label: "20 MM" },
-      { key: "agg_12mm", label: "12 MM" },
-      { key: "cem1",     label: "Cement 1" },
-      { key: "cem2",     label: "Cement 2" },
-      { key: "fly",      label: "Fly Ash" },
-      { key: "wtr1",     label: "Water 1" },
-      { key: "adx1",     label: "Admix 1" },
-      { key: "adx2",     label: "Admix 2" },
+      { key: "sand1",    label: "Sand 1",   step: "1" },
+      { key: "sand2",    label: "Sand 2",   step: "1" },
+      { key: "agg_20mm", label: "20 MM",    step: "1" },
+      { key: "agg_12mm", label: "12 MM",    step: "1" },
+      { key: "cem1",     label: "Cement 1", step: "1" },
+      { key: "cem2",     label: "Cement 2", step: "1" },
+      { key: "fly",      label: "Fly Ash",  step: "1" },
+      { key: "wtr1",     label: "Water 1",  step: "1" },
+      { key: "adx1",     label: "Admix 1",  step: "0.1" },
+      { key: "adx2",     label: "Admix 2",  step: "0.1" },
     ],
   },
   {
@@ -32,15 +33,15 @@ const GROUPS = [
     color: "bg-green-50 border-green-200",
     headerColor: "text-green-700",
     ingredients: [
-      { key: "agg_6mm",  label: "6 MM" },
-      { key: "agg6",     label: "Agg" },
-      { key: "cem3",     label: "Cement 3" },
-      { key: "cem4",     label: "Cement 4" },
-      { key: "wtr2",     label: "Water 2" },
-      { key: "wtr3",     label: "Water 3" },
-      { key: "adx3",     label: "Admix 3" },
-      { key: "adx4",     label: "Admix 4" },
-      { key: "silica",   label: "Silica" },
+      { key: "agg_6mm",  label: "6 MM",      step: "1" },
+      { key: "agg6",     label: "Agg",        step: "1" },
+      { key: "cem3",     label: "Cement 3",   step: "1" },
+      { key: "cem4",     label: "Cement 4",   step: "1" },
+      { key: "wtr2",     label: "Water 2",    step: "1" },
+      { key: "wtr3",     label: "Water 3",    step: "1" },
+      { key: "adx3",     label: "Admix 3",    step: "0.1" },
+      { key: "adx4",     label: "Admix 4",    step: "0.1" },
+      { key: "silica",   label: "Silica",     step: "1" },
     ],
   },
   {
@@ -49,11 +50,11 @@ const GROUPS = [
     color: "bg-orange-50 border-orange-200",
     headerColor: "text-orange-700",
     ingredients: [
-      { key: "moisture", label: "Moisture" },
-      { key: "filler",   label: "Filler" },
-      { key: "col1",     label: "1" },
-      { key: "col2",     label: "2" },
-      { key: "col3",     label: "3" },
+      { key: "moisture", label: "Moisture", step: "0.1" },
+      { key: "filler",   label: "Filler",   step: "1" },
+      { key: "col1",     label: "1",        step: "1" },
+      { key: "col2",     label: "2",        step: "1" },
+      { key: "col3",     label: "3",        step: "1" },
     ],
   },
 ];
@@ -250,7 +251,7 @@ export default function DesignMix() {
                     <div key={ing.key}>
                       <label className="text-xs text-gray-500 mb-0.5 block">{ing.label}</label>
                       <input
-                        type="number" step="0.001" min="0"
+                        type="number" step={ing.step ?? "1"} min="0"
                         className="border rounded px-2 py-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-primary bg-white"
                         value={formValues[ing.key] ?? "0"}
                         onChange={e => setFormValues(v => ({ ...v, [ing.key]: e.target.value }))}
