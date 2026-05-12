@@ -712,21 +712,41 @@ export default function BatchReport() {
 
   const cols = COLS[data.plant_type] || COLS_M125;
 
-  // Grade selector — fetch all design mixes for this customer, allow switching
-  const { data: customerMixes = [] } = useQuery({
+  // Grade selector — fetch all design mixes for this customer
+  const { data: customerMixes = [], isLoading: mixesLoading } = useQuery({
     queryKey: ["customer-mixes", data.customer_id],
     queryFn: () => api.get(`/design-mixes?customer_id=${data.customer_id}`).then(r => r.data),
     staleTime: 30000,
   });
-  const activeGradeId = selectedGradeId ?? data.grade_id;
-  const activeMix = selectedGradeId
-    ? customerMixes.find(m => m.grade_id === selectedGradeId)
-    : data.design_mix;
-  const activeGradeName = selectedGradeId
-    ? customerMixes.find(m => m.grade_id === selectedGradeId)?.grade_name ?? data.grade_name
-    : data.grade_name;
 
-  const dm   = activeMix ?? data.design_mix;
+  // Auto-select the first available mix if delivery has no design mix
+  const effectiveGradeId = selectedGradeId
+    ?? (data.design_mix ? data.grade_id : customerMixes[0]?.grade_id ?? null);
+
+  const activeMix = effectiveGradeId
+    ? (customerMixes.find(m => m.grade_id === effectiveGradeId) ?? data.design_mix)
+    : data.design_mix;
+
+  const activeGradeName = customerMixes.find(m => m.grade_id === effectiveGradeId)?.grade_name
+    ?? data.grade_name;
+
+  const dm = activeMix;
+
+  // Show actionable error if truly no design mix available
+  if (!mixesLoading && !dm && customerMixes.length === 0) {
+    return (
+      <div className="p-8 space-y-3">
+        <div className="text-red-600 font-semibold text-lg">No Design Mix Found</div>
+        <p className="text-gray-600">No design mix exists for <strong>{data.customer_name}</strong>.</p>
+        <p className="text-gray-500 text-sm">
+          Go to <strong>Master Data → Design Mix</strong> and add a mix for this customer and grade
+          (<strong>{data.grade_name}</strong>) before viewing the batch report.
+        </p>
+        <button className="btn-secondary" onClick={() => navigate(-1)}>← Back</button>
+      </div>
+    );
+  }
+
   const { numBatches, batchSize } = calcBatches(parseFloat(data.quantity_m3), data.plant_type);
 
   // ── Compute times once per delivery (cached in timingRef) ─────────────────
@@ -810,11 +830,13 @@ export default function BatchReport() {
         <div className="flex items-center gap-1 text-xs text-gray-500">
           <span>Grade:</span>
           <select className="input py-1 text-xs"
-            value={activeGradeId}
+            value={effectiveGradeId ?? ""}
             onChange={e => { setSelectedGradeId(parseInt(e.target.value)); randRowsRef.current = { id: null, rows: null }; }}>
-            <option value={data.grade_id}>{data.grade_name} (original)</option>
-            {customerMixes.filter(m => m.grade_id !== data.grade_id).map(m => (
-              <option key={m.grade_id} value={m.grade_id}>{m.grade_name}</option>
+            {!data.design_mix && <option value="">— select grade —</option>}
+            {customerMixes.map(m => (
+              <option key={m.grade_id} value={m.grade_id}>
+                {m.grade_name}{m.grade_id === data.grade_id ? " (original)" : ""}
+              </option>
             ))}
           </select>
         </div>
