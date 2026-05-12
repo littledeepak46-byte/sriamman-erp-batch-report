@@ -12,7 +12,7 @@ from app.models.user import User
 from app.models.weighment import IngredientLabel, WeighmentRecord, WeighmentSequence
 from app.routers.auth import get_current_user, require_role
 from app.schemas.weighment import (
-    IngredientLabelOut, IngredientLabelUpdate,
+    IngredientLabelCreate, IngredientLabelOut, IngredientLabelUpdate,
     WeighmentCreate, WeighmentOut, WeighmentUpdate,
 )
 
@@ -157,6 +157,33 @@ def delete_weighment(wid: int, db: Session = Depends(get_db), _: User = Depends(
 
 
 # ── Ingredient Labels ──────────────────────────────────────────────────────────
+
+@router.post("/ingredient-labels", response_model=IngredientLabelOut, status_code=201)
+def create_ingredient_label(
+    body: IngredientLabelCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+):
+    key = body.key.strip().lower().replace(" ", "_")
+    if db.get(IngredientLabel, key):
+        raise HTTPException(400, f"Ingredient key '{key}' already exists")
+    lbl = IngredientLabel(key=key, label=body.label.strip(),
+                          group=body.group, sort_order=body.sort_order)
+    db.add(lbl); db.commit(); db.refresh(lbl)
+    return lbl
+
+
+@router.delete("/ingredient-labels/{key}", status_code=204)
+def delete_ingredient_label(
+    key: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+):
+    lbl = db.get(IngredientLabel, key)
+    if not lbl:
+        raise HTTPException(404, "Ingredient not found")
+    db.delete(lbl); db.commit()
+
 
 @router.get("/ingredient-labels", response_model=list[IngredientLabelOut])
 def get_ingredient_labels(db: Session = Depends(get_db), _: User = Depends(get_current_user)):

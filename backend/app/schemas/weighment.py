@@ -64,3 +64,10 @@ class IngredientLabelOut(BaseModel):
 
 class IngredientLabelUpdate(BaseModel):
     label: str
+
+
+class IngredientLabelCreate(BaseModel):
+    key: str
+    label: str
+    group: str = "COMMON"   # COMMON | M125 | CP30
+    sort_order: int = 99

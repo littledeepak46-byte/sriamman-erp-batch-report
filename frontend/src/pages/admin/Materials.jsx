@@ -235,6 +235,8 @@ function IngredientLabelsTab() {
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [error, setError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newForm, setNewForm] = useState({ key: "", label: "", group: "COMMON", sort_order: "99" });
 
   const { data: labels = [] } = useQuery({
     queryKey: ["ingredient-labels"],
@@ -245,6 +247,17 @@ function IngredientLabelsTab() {
     mutationFn: ({ key, label }) => api.put(`/ingredient-labels/${key}`, { label }),
     onSuccess: () => { qc.invalidateQueries(["ingredient-labels"]); setEditing(null); setError(""); },
     onError: e => setError(e.response?.data?.detail || "Error"),
+  });
+
+  const create = useMutation({
+    mutationFn: d => api.post("/ingredient-labels", d),
+    onSuccess: () => { qc.invalidateQueries(["ingredient-labels"]); setAdding(false); setNewForm({ key: "", label: "", group: "COMMON", sort_order: "99" }); setError(""); },
+    onError: e => setError(e.response?.data?.detail || "Error"),
+  });
+
+  const del = useMutation({
+    mutationFn: key => api.delete(`/ingredient-labels/${key}`),
+    onSuccess: () => qc.invalidateQueries(["ingredient-labels"]),
   });
 
   const grouped = labels.reduce((acc, l) => {
@@ -258,7 +271,54 @@ function IngredientLabelsTab() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">Rename ingredient labels used in the Design Mix form and Batch Reports.</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">Rename or add ingredient labels used in the Design Mix form and Batch Reports.</p>
+        <button className="btn-primary flex items-center gap-1 text-sm"
+          onClick={() => { setAdding(true); setError(""); }}>
+          <Plus size={14} /> Add Ingredient
+        </button>
+      </div>
+
+      {adding && (
+        <div className="card space-y-3">
+          <h3 className="font-semibold text-sm text-primary">New Ingredient</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label className="label">Key (unique)</label>
+              <input className="input" placeholder="e.g. agg_10mm" value={newForm.key}
+                onChange={e => setNewForm(f => ({ ...f, key: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Display Label</label>
+              <input className="input" placeholder="e.g. 10MM Aggregate" value={newForm.label}
+                onChange={e => setNewForm(f => ({ ...f, label: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Group</label>
+              <select className="input" value={newForm.group}
+                onChange={e => setNewForm(f => ({ ...f, group: e.target.value }))}>
+                <option value="COMMON">Common (Both Plants)</option>
+                <option value="M125">M1.25 Extra</option>
+                <option value="CP30">CP30 Extra</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Sort Order</label>
+              <input className="input" type="number" value={newForm.sort_order}
+                onChange={e => setNewForm(f => ({ ...f, sort_order: e.target.value }))} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="btn-primary text-sm"
+              disabled={!newForm.key || !newForm.label || create.isPending}
+              onClick={() => create.mutate({ ...newForm, sort_order: parseInt(newForm.sort_order) || 99 })}>
+              {create.isPending ? "Saving…" : "Save Ingredient"}
+            </button>
+            <button className="btn-secondary text-sm" onClick={() => setAdding(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       {["COMMON", "M125", "CP30"].map(grp => (
         <div key={grp} className="card p-0 overflow-hidden">
           <div className={`px-4 py-2 bg-gray-50 border-b font-semibold text-sm ${GROUP_COLORS[grp]}`}>
@@ -294,10 +354,16 @@ function IngredientLabelsTab() {
                           onClick={() => setEditing(null)}>Cancel</button>
                       </div>
                     ) : (
-                      <button className="text-gray-400 hover:text-primary"
-                        onClick={() => { setEditing(l.key); setEditValue(l.label); setError(""); }}>
-                        <Pencil size={14} />
-                      </button>
+                      <div className="flex gap-2 justify-end">
+                        <button className="text-gray-400 hover:text-primary"
+                          onClick={() => { setEditing(l.key); setEditValue(l.label); setError(""); }}>
+                          <Pencil size={14} />
+                        </button>
+                        <button className="text-gray-400 hover:text-red-500"
+                          onClick={() => { if (window.confirm(`Delete "${l.label}"?`)) del.mutate(l.key); }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
