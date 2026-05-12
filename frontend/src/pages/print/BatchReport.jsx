@@ -184,30 +184,33 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
   // Aggregate column keys — row 3 shows 0.00, row 4 shows 0.00 only for these
   const AGG_KEYS = new Set(["sand1","agg_20mm","sand2","agg_12mm","agg_6mm","agg6"]);
 
-  // ── Design tokens ─────────────────────────────────────────────────────────
-  const F     = FONT;
-  const fs    = "9pt";
-  const INNER = "1px dotted #aaa";   // gray dotted — cell dividers
-  const PAD   = "2pt 3pt";           // inner padding for values
+  // ── Design tokens — per PDF style guide ──────────────────────────────────
+  const F      = FONT;
+  const fs     = "8pt";                        // table values: 7.5–8.5pt
+  const CELL   = "0.5px solid #C8C8C8";        // light gray solid — normal cells
+  const DARK   = "1px solid #333";             // dark border — outer + total boxes
+  const PAD    = "2pt 3pt";
 
-  // Base data cell — inner border, proper padding, right-aligned value
-  const tc  = { border: INNER, padding: PAD, fontSize: fs, textAlign: "center",
+  // Base data cell — light gray solid border, 8pt regular, centered
+  const tc  = { border: CELL, padding: PAD, fontSize: fs, textAlign: "center",
                 fontFamily: F, whiteSpace: "nowrap", backgroundColor: "#fff" };
-  // Header cells — bold, centered
-  const thc = { ...tc, textAlign: "center", whiteSpace: "nowrap", fontWeight: "normal" };
+  // Column header — 8pt bold
+  const thc = { ...tc, fontWeight: "bold", whiteSpace: "nowrap" };
   // Category row
   const chc = { ...thc };
-  // Recipe per m³ row: bold
-  const rtr = { ...tc, fontWeight: "bold" };
-  // Label-band: left-aligned, italic
-  const lbl = { ...tc, textAlign: "left", fontStyle: "italic" };
-  // Section label (Total Set / Total Actual / Diff %): left, bold
-  const sec = { ...tc, textAlign: "left", fontWeight: "bold" };
+  // Recipe per m³ — regular (not bold per spec "Table values: regular")
+  const rtr = { ...tc };
+  // Label-band: left-aligned, italic, 9pt
+  const lbl = { ...tc, textAlign: "left", fontStyle: "italic", fontSize: "9pt" };
+  // Section label — 9pt bold
+  const sec = { ...tc, textAlign: "left", fontWeight: "bold", fontSize: "9pt" };
+  // Total value cell — black box border, 9pt bold (key totals per spec)
+  const tot = { ...tc, border: DARK, fontWeight: "bold", fontSize: "9pt" };
 
   return (
     <div style={{ fontFamily: F, fontSize: fs, backgroundColor: "#fff",
       padding: "4mm 15mm", boxSizing: "border-box" }}>
-      <div style={{ border: INNER, padding: "3mm" }}>
+      <div style={{ border: DARK, padding: "3mm" }}>
 
       {/* ══ HEADER — Logo (top-left) + Company name (center) ════════════════ */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: "3px" }}>
@@ -262,7 +265,8 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
         </tbody>
       </table>
 
-      {/* ══ MATERIAL TABLE ═══════════════════════════════════════════════════ */}
+      {/* ══ MATERIAL TABLE — dark outer, light gray inner cells ════════════ */}
+      <div style={{ border: DARK }}>
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
         <thead>
           {/* Row 13 — Category header — no borders at all */}
@@ -293,10 +297,10 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           {/* Row 16 — Mass of Recipe Targets — label + value in one full-width cell */}
           <tr style={{ height: "16pt" }}>
             <td colSpan={NCOLS}
-              style={{ ...tc, border: "none", fontSize: "8pt" }}>
+              style={{ ...tc, border: "none", fontSize: "9pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
                 <span style={{ fontStyle: "italic" }}>Mass of Recipe Targets in Kgs.</span>
-                <span style={{ fontWeight: "bold" }}>{massRecTgt.toFixed(2)}</span>
+                <span style={{ fontWeight: "bold", border: DARK, padding: "0 4px" }}>{massRecTgt.toFixed(2)}</span>
               </div>
             </td>
           </tr>
@@ -398,10 +402,10 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
           {/* Row 66 — Mass of Total Set Weight */}
           <tr style={{ height: "16pt" }}>
-            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
+            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "9pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
                 <span style={{ fontStyle: "italic" }}>Mass of Total Set Weight in Kgs.</span>
-                <span style={{ fontWeight: "bold" }}>{massSet.toFixed(2)}</span>
+                <span style={{ fontWeight: "bold", border: DARK, padding: "0 4px" }}>{massSet.toFixed(2)}</span>
               </div>
             </td>
           </tr>
@@ -420,10 +424,10 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
           {/* Row 69 — Mass of Total Actual Weight */}
           <tr style={{ height: "16pt" }}>
-            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "8pt" }}>
+            <td colSpan={NCOLS} style={{ ...tc, border: "none", fontSize: "9pt" }}>
               <div style={{ display: "flex", justifyContent: "space-between", paddingRight: "2px" }}>
                 <span style={{ fontStyle: "italic" }}>Mass of Total Actual Weight in Kgs.</span>
-                <span style={{ fontWeight: "bold" }}>{massAct.toFixed(2)}</span>
+                <span style={{ fontWeight: "bold", border: DARK, padding: "0 4px" }}>{massAct.toFixed(2)}</span>
               </div>
             </td>
           </tr>
@@ -445,10 +449,11 @@ function M125Print({ d, rows, onActualChange, batchEndStr, batchStartStr, weighm
           </tr>
         </tbody>
       </table>
+      </div>
 
       {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
       <table style={{ width: "100%", borderCollapse: "collapse",
-        borderTop: INNER, marginTop: "3px", paddingTop: "2px" }}>
+        borderTop: DARK, marginTop: "3px", paddingTop: "2px" }}>
         <tbody>
           <tr>
             <td style={{ width: "45%", fontFamily: F, fontSize: "7px", verticalAlign: "middle" }}>
@@ -684,9 +689,11 @@ export default function BatchReport() {
   // Build timing lookup  { batch_end_min:2, batch_end_max:4, ... }
   const TIM = Object.fromEntries(timingData.map(t => [t.key, t.value]));
 
+  const [selectedGradeId, setSelectedGradeId] = useState(null); // null = use delivery's grade
+
   const printRef      = useRef();
   const randRowsRef   = useRef({ id: null, rows: null });
-  const timingRef     = useRef(null); // cache computed times per delivery
+  const timingRef     = useRef(null);
 
   const [saving,  setSaving]  = useState(false);
   const [saved,   setSaved]   = useState(false);
@@ -704,7 +711,22 @@ export default function BatchReport() {
     return <div className="p-8 text-gray-500">No batch report for this delivery (no plant type selected).</div>;
 
   const cols = COLS[data.plant_type] || COLS_M125;
-  const dm   = data.design_mix;
+
+  // Grade selector — fetch all design mixes for this customer, allow switching
+  const { data: customerMixes = [] } = useQuery({
+    queryKey: ["customer-mixes", data.customer_id],
+    queryFn: () => api.get(`/design-mixes?customer_id=${data.customer_id}`).then(r => r.data),
+    staleTime: 30000,
+  });
+  const activeGradeId = selectedGradeId ?? data.grade_id;
+  const activeMix = selectedGradeId
+    ? customerMixes.find(m => m.grade_id === selectedGradeId)
+    : data.design_mix;
+  const activeGradeName = selectedGradeId
+    ? customerMixes.find(m => m.grade_id === selectedGradeId)?.grade_name ?? data.grade_name
+    : data.grade_name;
+
+  const dm   = activeMix ?? data.design_mix;
   const { numBatches, batchSize } = calcBatches(parseFloat(data.quantity_m3), data.plant_type);
 
   // ── Compute times once per delivery (cached in timingRef) ─────────────────
@@ -783,8 +805,19 @@ export default function BatchReport() {
           <ArrowLeft size={15} /> Back
         </button>
         <span className="text-sm font-semibold text-primary">
-          Batch Report — {data.plant_type} | Batch #{data.batch_number} | {data.grade_name}
+          Batch Report — {data.plant_type} | Batch #{data.batch_number}
         </span>
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <span>Grade:</span>
+          <select className="input py-1 text-xs"
+            value={activeGradeId}
+            onChange={e => { setSelectedGradeId(parseInt(e.target.value)); randRowsRef.current = { id: null, rows: null }; }}>
+            <option value={data.grade_id}>{data.grade_name} (original)</option>
+            {customerMixes.filter(m => m.grade_id !== data.grade_id).map(m => (
+              <option key={m.grade_id} value={m.grade_id}>{m.grade_name}</option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-1 text-xs text-gray-500">
           <span>DC Time:</span>
           <input type="time" className="input py-1 text-xs w-28"
