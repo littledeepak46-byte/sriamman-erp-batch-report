@@ -116,10 +116,24 @@ export default function DesignMix() {
     if (modal) setDensity(computeDensity(formValues));
   }, [formValues, modal]);
 
+  // Build a step lookup from GROUPS for quick formatting
+  const STEP = Object.fromEntries(
+    GROUPS.flatMap(g => g.ingredients.map(i => [i.key, i.step ?? "1"]))
+  );
+
+  function formatVal(key, raw) {
+    const n = parseFloat(raw) || 0;
+    return STEP[key] === "0.1" ? String(parseFloat(n.toFixed(1))) : String(Math.round(n));
+  }
+
   function openModal(mix = null) {
-    const initial = mix
-      ? { ...mix, customer_id: mix.customer_id, grade_id: mix.grade_id }
-      : emptyForm(filterCustomerId, grades[0]?.id ?? "");
+    let initial;
+    if (mix) {
+      initial = { ...mix, customer_id: mix.customer_id, grade_id: mix.grade_id };
+      ALL_KEYS.forEach(k => { initial[k] = formatVal(k, mix[k]); });
+    } else {
+      initial = emptyForm(filterCustomerId, grades[0]?.id ?? "");
+    }
     setFormValues(initial);
     setDensity(computeDensity(initial));
     setApiError("");
