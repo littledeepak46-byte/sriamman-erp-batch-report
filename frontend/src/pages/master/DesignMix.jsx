@@ -277,11 +277,11 @@ export default function DesignMix() {
             ))}
 
             {/* Live density indicator */}
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${densityOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${densityOk ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
               {densityOk ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
               <span className="text-sm font-medium">
                 Total Density: <strong>{density.toFixed(1)} kg/m³</strong>
-                {!densityOk && <span className="text-xs ml-2">(minimum {DENSITY_MIN} kg/m³ required)</span>}
+                {!densityOk && <span className="text-xs ml-2">(below {DENSITY_MIN} kg/m³ — saved as warning)</span>}
               </span>
             </div>
 
@@ -289,7 +289,7 @@ export default function DesignMix() {
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" className="btn-primary" disabled={saveMix.isPending || !densityOk}>
+              <button type="submit" className="btn-primary" disabled={saveMix.isPending}>
                 {saveMix.isPending ? "Saving…" : "Save Design Mix"}
               </button>
             </div>
